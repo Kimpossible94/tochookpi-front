@@ -29,7 +29,7 @@ const components: { title: string; href: string; description: string }[] = [
 
 const Header = () => {
     return (
-        <header className="p-4 flex items-center justify-between fixed top-0 w-full bg-white">
+        <header className="p-4 flex items-center justify-between fixed top-0 w-full bg-white z-50">
             {/* 로고 (왼쪽) */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/"

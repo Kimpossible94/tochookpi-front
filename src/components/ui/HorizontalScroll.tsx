@@ -35,11 +35,11 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
     };
 
     // 휠 스크롤
-    const handleWheel = (e: React.WheelEvent) => {
-        if (e.deltaY !== 0 && scrollContainerRef.current) {
-            scrollContainerRef.current.scrollLeft += e.deltaY;
-        }
-    };
+    // const handleWheel = (e: React.WheelEvent) => {
+    //     if (e.deltaY !== 0 && scrollContainerRef.current) {
+    //         scrollContainerRef.current.scrollLeft += e.deltaY;
+    //     }
+    // };
 
     return (
         <div
@@ -49,7 +49,7 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            onWheel={handleWheel}
+            // onWheel={handleWheel}
         >
             {children}
         </div>
