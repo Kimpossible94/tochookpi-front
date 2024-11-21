@@ -43,10 +43,11 @@ const Header = () => {
                     <input
                         type="text"
                         placeholder="모임을 검색하세요..."
-                        className="w-full py-2 pl-5 text-sm rounded-3xl border border-gray-200 bg-gray-100 focus:outline-none"
+                        className="w-full py-2 pl-5 text-sm rounded-3xl border border-gray-200 bg-gray-100 focus:outline-none
+                            hover:border-red-400 hover:bg-white focus:border-red-400 focus:bg-white duration-150"
                     />
                     <button
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 text-sm text-white bg-red-400 rounded-3xl hover:bg-blue-600 focus:outline-none"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 text-sm text-white bg-red-400 rounded-3xl hover:opacity-80 focus:outline-none"
                         onClick={() => console.log("검색 버튼 클릭됨")}
                     >
                         검색
