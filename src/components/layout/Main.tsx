@@ -117,11 +117,11 @@ const Main = () => {
                 </button>
             </section>
 
-            {meetings.map((subject) => (
+            {meetings.map((subject, idx) => (
                 <section>
                     <h2 className="text-xl font-bold mb-4">{subject.subjectName}</h2>
                     <HorizontalScroll>
-                        {subject.children.map((meeting) => (
+                        {subject.children.map((meeting, idx) => (
                             <Card
                                 className="min-w-[150px] md:min-w-[250px] lg:min-w-[350px] mr-10 flex flex-col justify-between">
                                 <CardHeader>
