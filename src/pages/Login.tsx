@@ -45,14 +45,14 @@ const Login = () => {
                         로그인
                     </Button>
 
-                    <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-                        <a href="/forgot-password" className="hover:underline">
-                            비밀번호를 잊으셨나요?
-                        </a>
-                        <a href="/signup" className="hover:underline">
-                            회원가입
-                        </a>
-                    </div>
+                    {/*<div className="flex justify-between items-center mt-4 text-sm text-gray-600">*/}
+                    {/*    <a href="/forgot-password" className="hover:underline">*/}
+                    {/*        비밀번호를 잊으셨나요?*/}
+                    {/*    </a>*/}
+                    {/*    <a href="/signup" className="hover:underline">*/}
+                    {/*        회원가입*/}
+                    {/*    </a>*/}
+                    {/*</div>*/}
 
                     {/* 소셜 로그인 */}
                     <div className="mt-6">
