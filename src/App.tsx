@@ -1,9 +1,10 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import {BrowserRouter, Route, Routes, useLocation} from "react-router-dom";
 import Header from "@/components/layout/Header";
-import Main from "@/components/layout/Main";
+import Main from "@/pages/Main";
 import Footer from "@/components/layout/Footer";
 import Login from "@/pages/Login"; // 로그인 페이지 경로
+import CreateMeeting from './pages/CreateMeeting';
 
 function App() {
     return (
@@ -13,6 +14,7 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Main />} />
                         <Route path="/login" element={<Login />} />
+                        <Route path="/create-meeting" element={<CreateMeeting />} />
                     </Routes>
                 </ConditionalLayout>
             </BrowserRouter>
