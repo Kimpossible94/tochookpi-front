@@ -1,9 +1,10 @@
 import * as React from "react";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import HorizontalScroll from "../ui/HorizontalScroll";
+import HorizontalScroll from "../components/ui/HorizontalScroll";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
+import { Link } from "react-router-dom";
 
 const hotMeetings = [
     {
@@ -109,12 +110,14 @@ const Main = () => {
         <div className="p-6 space-y-10 pt-20">
             <section className="text-center my-20">
                 <h1 className="text-5xl font-extrabold">모임 한눈에 보기</h1>
-                <button
-                    className="mt-10 py-3 px-5 text-xl text-white bg-black rounded-3xl hover:opacity-80 focus:outline-none"
-                    onClick={() => console.log("모임 만들기 버튼 클릭됨")}
-                >
-                    모임 만들기
-                </button>
+                <Link to="/create-meeting">
+                    <button
+                        className="mt-10 py-3 px-5 text-xl text-white bg-black rounded-3xl hover:opacity-80 focus:outline-none"
+                        onClick={() => console.log("모임 만들기 버튼 클릭됨")}
+                    >
+                        모임 만들기
+                    </button>
+                </Link>
             </section>
 
             {meetings.map((subject, idx) => (
