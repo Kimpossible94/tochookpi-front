@@ -3,8 +3,9 @@ import {BrowserRouter, Route, Routes, useLocation} from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Main from "@/pages/Main";
 import Footer from "@/components/layout/Footer";
-import Login from "@/pages/Login"; // 로그인 페이지 경로
+import Login from "@/pages/Login";
 import CreateMeeting from './pages/CreateMeeting';
+import MyPage from "@/pages/MyPage";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                         <Route path="/" element={<Main />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/create-meeting" element={<CreateMeeting />} />
+                        <Route path="/my" element={<MyPage />} />
                     </Routes>
                 </ConditionalLayout>
             </BrowserRouter>
