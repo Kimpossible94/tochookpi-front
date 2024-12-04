@@ -1,11 +1,23 @@
-// Header.tsx
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "../ui/navigation-menu";
+import {
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
+    navigationMenuTriggerStyle,
+} from "../ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import {BellIcon} from "@radix-ui/react-icons";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import { BellIcon } from "@radix-ui/react-icons";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const components: { title: string; href: string; description: string }[] = [
     {
@@ -21,34 +33,44 @@ const components: { title: string; href: string; description: string }[] = [
 ];
 
 const Header = () => {
-    const [hasNotification, setHasNotification] = React.useState(true);
     const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+
+    // 현재 시간을 기준으로 시간 차이 계산 함수
+    const calculateTimeDifference = (timestamp: Date) => {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return "방금";
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours}시간 전`;
+        const diffInDays = Math.floor(diffInHours / 24);
+        return `${diffInDays}일 전`;
+    };
+
     const notifications = [
-        "새로운 사람이 모임에 참여했습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        "모임에 새로운 댓글이 달렸습니다!",
-        // 다른 알림 내용들...
+        { groupName: "산책모임", message: "에서 초대가 왔습니다.", timestamp: new Date(new Date().getTime() - 1000) },
+        { groupName: "스터디모임", message: " 새로운 멤버가 들어왔습니다.", timestamp: new Date(new Date().getTime() - 5 * 60 * 1000) },
+        { groupName: "독서모임", message: " 새로운 공지사항이 있습니다.", timestamp: new Date(new Date().getTime() - 2 * 60 * 60 * 1000) },
+        { groupName: "헬스모임", message: "에서 초대가 왔습니다.", timestamp: new Date(new Date().getTime() - 26 * 60 * 60 * 1000) },
+        { groupName: "코딩모임", message: " 새로운 공지사항이 있습니다.", timestamp: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000) },
+        { groupName: "산책모임", message: "에서 초대가 왔습니다.", timestamp: new Date(new Date().getTime() - 1000) },
+        { groupName: "스터디모임", message: " 새로운 멤버가 들어왔습니다.", timestamp: new Date(new Date().getTime() - 5 * 60 * 1000) },
+        { groupName: "독서모임", message: " 새로운 공지사항이 있습니다.", timestamp: new Date(new Date().getTime() - 2 * 60 * 60 * 1000) },
+        { groupName: "헬스모임", message: "에서 초대가 왔습니다.", timestamp: new Date(new Date().getTime() - 26 * 60 * 60 * 1000) },
+        { groupName: "코딩모임", message: " 새로운 공지사항이 있습니다.", timestamp: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000) },
     ];
 
+    const hasNotifications = notifications.length > 0;
+
     const toggleNotifications = () => {
-        setIsNotificationsOpen(!isNotificationsOpen); // 알림 상태 토글 (예: 클릭 시)
+        setIsNotificationsOpen(!isNotificationsOpen);
     };
 
     return (
         <header className="p-4 flex items-center justify-between fixed top-0 w-full bg-white z-50">
-            {/* 로고 (왼쪽) */}
+            {/* 로고 */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/" className="text-lg font-bold whitespace-nowrap font-custom">
                     <p className="text-right">토축피</p>
@@ -71,6 +93,7 @@ const Header = () => {
                 </div>
             </div>
 
+            {/* 메뉴 및 알림 */}
             <div className="flex items-center space-x-4 text-sm">
                 <NavigationMenu className="mr-10">
                     <NavigationMenuList>
@@ -100,30 +123,44 @@ const Header = () => {
                     </NavigationMenuList>
                 </NavigationMenu>
 
-                {/* 알림 아이콘 (알림이 있을 경우 배지 표시) */}
-                <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                        <TooltipTrigger className="flex items-center justify-center p-2 text-gray-600">
-                            <BellIcon></BellIcon>
-                        </TooltipTrigger>
-                        <TooltipContent className="w-60 p-2 bg-white shadow-md rounded-md">
+                {/* 알림 아이콘 */}
+                <div className="relative">
+                    <button
+                        onClick={toggleNotifications}
+                        className="relative flex items-center justify-center p-2 text-gray-600 focus:outline-none"
+                    >
+                        <BellIcon />
+                        {hasNotifications && (
+                            <span className="absolute top-0 right-0 w-4 h-4 text-xs text-white bg-red-500 rounded-full flex items-center justify-center">
+                                {notifications.length}
+                            </span>
+                        )}
+                    </button>
+
+                    {isNotificationsOpen && (
+                        <div className="absolute right-0 mt-2 w-72 max-h-64 overflow-y-auto p-4 bg-white shadow-md rounded-md z-50">
                             <ul>
                                 {notifications.length > 0 ? (
                                     notifications.map((notification, index) => (
                                         <li
                                             key={index}
-                                            className="text-sm text-gray-700 p-2 hover:bg-gray-100 rounded-md"
+                                            className="text-sm text-gray-700 py-2 hover:bg-gray-100 rounded-md flex justify-between"
                                         >
-                                            {notification}
+                                            <div className="flex-1">
+                                                <strong>[{notification.groupName}]</strong> {notification.message}
+                                            </div>
+                                            <span className="text-xs text-gray-500 w-1/5 text-right">
+                                                {calculateTimeDifference(notification.timestamp)}
+                                            </span>
                                         </li>
                                     ))
                                 ) : (
-                                    <li className="text-sm text-gray-500 p-2">새로운 알림이 없습니다.</li>
+                                    <li className="text-sm text-gray-500 py-2">새로운 알림이 없습니다.</li>
                                 )}
                             </ul>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                        </div>
+                    )}
+                </div>
 
                 {/* 사용자 아바타 */}
                 <Avatar>
