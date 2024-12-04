@@ -3,11 +3,15 @@ import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} f
 import {Button} from "@/components/ui/button";
 import HorizontalScroll from "../components/ui/HorizontalScroll";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
-import { Link } from "react-router-dom";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "../components/ui/tooltip";
+import {Link} from "react-router-dom";
+import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
+import {Meeting, MeetingSection} from "@/types/meeting";
+import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 
-const hotMeetings = [
+const hotMeetings: Meeting[] = [
     {
+        id: "1", // 고유한 id 추가
         image: "/path/to/hot-meeting1.jpg",
         title: "서울 방탈출",
         description: "강남에서 방탈출할 사람~",
@@ -16,6 +20,7 @@ const hotMeetings = [
         participants: ["강광일", "김영범"]
     },
     {
+        id: "2", // 고유한 id 추가
         image: "/path/to/hot-meeting2.jpg",
         title: "방어회 먹자",
         description: "가락시장역, 너만오면 고",
@@ -25,8 +30,9 @@ const hotMeetings = [
     },
 ];
 
-const recentMeetings = [
+const recentMeetings: Meeting[] = [
     {
+        id: "3", // 고유한 id 추가
         image: "/path/to/recent-meeting1.jpg",
         title: "칼바람 전사 모집",
         description: "전사의 심장이 울린다 둥둥둥..",
@@ -35,6 +41,7 @@ const recentMeetings = [
         participants: ["김영범"]
     },
     {
+        id: "4", // 고유한 id 추가
         image: "/path/to/recent-meeting2.jpg",
         title: "전시회",
         description: "고흐 전시회 갈사람..?",
@@ -43,6 +50,7 @@ const recentMeetings = [
         participants: ["강광일", "방원"]
     },
     {
+        id: "5", // 고유한 id 추가
         image: "/path/to/hot-meeting1.jpg",
         title: "서울 방탈출",
         description: "강남에서 방탈출할 사람~",
@@ -51,6 +59,7 @@ const recentMeetings = [
         participants: ["강광일", "김영범"]
     },
     {
+        id: "6", // 고유한 id 추가
         image: "/path/to/hot-meeting2.jpg",
         title: "방어회 먹자",
         description: "가락시장역, 너만오면 고",
@@ -60,8 +69,9 @@ const recentMeetings = [
     },
 ];
 
-const gameMeetings = [
+const gameMeetings: Meeting[] = [
     {
+        id: "7", // 고유한 id 추가
         image: "/path/to/recent-meeting1.jpg",
         title: "칼바람 전사 모집",
         description: "전사의 심장이 울린다 둥둥둥..",
@@ -71,8 +81,9 @@ const gameMeetings = [
     },
 ];
 
-const artExhibitionMeetings = [
+const artExhibitionMeetings: Meeting[] = [
     {
+        id: "8", // 고유한 id 추가
         image: "/path/to/recent-meeting2.jpg",
         title: "전시회",
         description: "고흐 전시회 갈사람..?",
@@ -82,7 +93,7 @@ const artExhibitionMeetings = [
     },
 ];
 
-const meetings = [
+const meetings: MeetingSection[] = [
     {
         subject: 'Hot',
         subjectName: '지금 핫한 모임',
@@ -172,7 +183,14 @@ const Main = () => {
                                     </div>
                                 </CardContent>
                                 <CardFooter className="flex justify-between">
-                                    <Button variant="outline">자세히</Button>
+                                    <Dialog>
+                                        <DialogTrigger>
+                                            <Button variant="outline">자세히</Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-full max-h-full sm:max-w-[80%] sm:max-h-[80%] w-full h-full">
+                                            <MeetingDetail meetingId={meeting.id} />
+                                        </DialogContent>
+                                    </Dialog>
                                     <Button className="bg-red-400 hover:bg-red-400 hover:opacity-80">모임 참가</Button>
                                 </CardFooter>
                             </Card>
