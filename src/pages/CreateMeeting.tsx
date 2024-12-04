@@ -58,7 +58,7 @@ const CreateMeeting = () => {
     };
 
     const toggleMap = () => {
-        setShowMap((prev) => !prev); // 지도 표시 상태 토글
+        setShowMap((prev) => !prev);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -120,14 +120,14 @@ const CreateMeeting = () => {
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                    e.preventDefault(); // 기본 폼 제출 방지
+                                    e.preventDefault();
                                     handleSearch(e);
                                 }
                             }}
                         />
                         <button
                             type="button"
-                            onClick={toggleMap} // 지도 표시 상태 토글
+                            onClick={toggleMap}
                             className="ml-2 p-2 rounded-full hover:bg-gray-300"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">

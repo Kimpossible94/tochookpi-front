@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {Link} from "react-router-dom";
+import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -10,14 +10,8 @@ import {
     NavigationMenuTrigger,
     navigationMenuTriggerStyle,
 } from "../ui/navigation-menu";
-import { cn } from "@/lib/utils";
-import { BellIcon } from "@radix-ui/react-icons";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import {cn} from "@/lib/utils";
+import {BellIcon} from "@radix-ui/react-icons";
 
 const components: { title: string; href: string; description: string }[] = [
     {

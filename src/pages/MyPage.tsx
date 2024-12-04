@@ -36,7 +36,6 @@ const MyPage = () => {
         { name: "기본설정", value: "기본설정" },
     ];
 
-    // 하단에 표시할 항목들 (회원탈퇴)
     const bottomItems = [
         { name: "회원탈퇴", value: "회원탈퇴" },
     ];
