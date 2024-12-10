@@ -16,7 +16,7 @@ import {BellIcon} from "@radix-ui/react-icons";
 const components: { title: string; href: string; description: string }[] = [
     {
         title: "모임 목록",
-        href: "/docs/primitives/alert-dialog",
+        href: "/meeting-list",
         description: "원하는 모임을 조회하거나 만들어봐요.",
     },
     {

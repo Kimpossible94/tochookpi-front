@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import Login from "@/pages/Login";
 import CreateMeeting from './pages/CreateMeeting';
 import MyPage from "@/pages/MyPage";
+import MeetingList from "@/pages/MeetingList";
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/create-meeting" element={<CreateMeeting />} />
                         <Route path="/my" element={<MyPage />} />
+                        <Route path="/meeting-list" element={<MeetingList />} />
                     </Routes>
                 </ConditionalLayout>
             </BrowserRouter>

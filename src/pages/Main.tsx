@@ -120,6 +120,7 @@ const Main = () => {
     return (
         <div className="p-6 space-y-10 pt-20">
             <section className="text-center my-20">
+                {/*모임 한눈에 보기 말고 배너로 토축피 모여라 이미지 넣으면 더 좋을듯..?*/}
                 <h1 className="text-5xl font-extrabold">모임 한눈에 보기</h1>
                 <Link to="/create-meeting">
                     <button
