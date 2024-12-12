@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange: (date: Date) => void }) {
+export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange: (date: Date | null) => void }) {
     const [internalDate, setInternalDate] = React.useState<Date | undefined>(value);
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -45,6 +45,11 @@ export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange:
             setInternalDate(newDate);
             onChange(newDate); // 상위 컴포넌트로 전달
         }
+    };
+
+    const handleReset = () => {
+        setInternalDate(undefined);
+        onChange(null);
     };
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -90,11 +95,11 @@ export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange:
                                     </Button>
                                 ))}
                             </div>
-                            <ScrollBar orientation="horizontal" className="sm:hidden" />
+                            <ScrollBar orientation="horizontal" className="sm:hidden"/>
                         </ScrollArea>
                         <ScrollArea className="w-64 sm:w-auto">
                             <div className="flex sm:flex-col p-2">
-                                {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
+                                {Array.from({length: 12}, (_, i) => i * 5).map((minute) => (
                                     <Button
                                         key={minute}
                                         size="icon"
@@ -106,8 +111,23 @@ export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange:
                                     </Button>
                                 ))}
                             </div>
-                            <ScrollBar orientation="horizontal" className="sm:hidden" />
+                            <ScrollBar orientation="horizontal" className="sm:hidden"/>
                         </ScrollArea>
+                    </div>
+                </div>
+                <div className="flex justify-between p-2 border-t">
+                    <div className="p-2">
+                        <Button variant="ghost" size="sm" onClick={handleReset}>
+                            Reset
+                        </Button>
+                    </div>
+                    <div className="p-2">
+                        <Button variant="ghost"
+                                size="sm"
+                                onClick={() => setIsOpen(false)}
+                        >
+                            Close
+                        </Button>
                     </div>
                 </div>
             </PopoverContent>

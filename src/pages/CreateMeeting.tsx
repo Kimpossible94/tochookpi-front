@@ -9,17 +9,27 @@ import MapBox from "@/components/ui/MapBox";
 import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
 
 const CreateMeeting = () => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = React.useState<{
+        title: string;
+        description: string;
+        location: string;
+        date: string | null;
+        fee: number;
+        maxParticipants: number;
+        category: string;
+        rules: string;
+        approvalRequired: boolean;
+    }>({
         title: "",
         description: "",
         location: "",
-        date: "",
+        date: null,
         fee: 0,
         maxParticipants: 0,
         category: "",
         rules: "",
         approvalRequired: false,
-    });
+    })
     const [searchKeyword, setSearchKeyword] = useState(""); // 검색 키워드
     const [searchResults, setSearchResults] = useState<any[]>([]); // 검색 결과
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; name: string } | null>(null); // 선택된 장소
@@ -166,7 +176,7 @@ const CreateMeeting = () => {
                         onChange={(date) =>
                             setFormData((prev) => ({
                                 ...prev,
-                                date: date.toISOString(),
+                                date: date ? date.toISOString() : null,
                             }))
                         }
                     />
