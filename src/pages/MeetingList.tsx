@@ -182,7 +182,7 @@ const MeetingListPage: React.FC = () => {
                             <FormField
                                 control={form.control}
                                 name="categories"
-                                render={({ field }) => (
+                                render={({ field }: { field:any }) => (
                                     <FormItem>
                                         <FormLabel>카테고리</FormLabel>
                                         <FormControl>
@@ -192,10 +192,10 @@ const MeetingListPage: React.FC = () => {
                                                         <Checkbox
                                                             id={category.value}
                                                             checked={field.value?.includes(category.value)} // 선택 여부
-                                                            onCheckedChange={(checked) => {
+                                                            onCheckedChange={(checked: boolean) => {
                                                                 const newValue = checked
                                                                     ? [...(field.value || []), category.value] // 체크되면 추가
-                                                                    : (field.value || []).filter((v) => v !== category.value); // 체크 해제되면 제거
+                                                                    : (field.value || []).filter((v: string) => v !== category.value); // 체크 해제되면 제거
                                                                 field.onChange(newValue); // 상태 업데이트
                                                             }}
                                                             className="mr-2"
@@ -216,7 +216,7 @@ const MeetingListPage: React.FC = () => {
                             <FormField
                                 control={form.control}
                                 name="searchTerm"
-                                render={({ field }) => (
+                                render={({ field }: { field:any }) => (
                                     <FormItem>
                                         <FormLabel>검색어</FormLabel>
                                         <FormControl>
@@ -231,7 +231,7 @@ const MeetingListPage: React.FC = () => {
                             <FormField
                                 control={form.control}
                                 name="startDate"
-                                render={({ field }) => (
+                                render={({ field }: { field:any }) => (
                                     <FormItem>
                                         <FormLabel>시작 날짜</FormLabel>
                                         <FormControl>
@@ -254,7 +254,7 @@ const MeetingListPage: React.FC = () => {
                             <FormField
                                 control={form.control}
                                 name="endDate"
-                                render={({ field }) => (
+                                render={({ field }: { field:any }) => (
                                     <FormItem>
                                         <FormLabel>종료 날짜</FormLabel>
                                         <FormControl>
