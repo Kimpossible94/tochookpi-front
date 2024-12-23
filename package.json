@@ -49,6 +49,7 @@
     "build": "craco build",
     "test": "craco test"
   },
+  "proxy": "http://localhost:8081",
   "eslintConfig": {
     "extends": [
       "react-app",

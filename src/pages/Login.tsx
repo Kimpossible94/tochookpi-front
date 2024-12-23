@@ -1,11 +1,34 @@
-import React from "react";
+import React, {useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import kakaoLoginBtn from "@/assets/kakao_login_medium_narrow.png";
 import naverLoginBtn from "@/assets/naver_login.png";
+import axios from "axios";
 
 const Login = () => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    // 로그인 요청 함수
+    const handleLogin = async () => {
+        if(!email || !password) {
+            alert("이메일과 패스워드를 입력해주세요.");
+            return;
+        }
+
+        try {
+            await axios.post("/login", {
+                email: email,
+                password: password,
+            }).then(e => {
+                console.log(e);
+            })
+        } catch (error) {
+            alert("로그인 중 문제가 발생했습니다.");
+        }
+    }
+
     return (
         <div className="min-h-screen flex">
             {/* 이미지 섹션 */}
@@ -30,7 +53,12 @@ const Login = () => {
                         <Label htmlFor="email" className="block text-sm font-bold text-gray-700">
                             이메일
                         </Label>
-                        <Input id="email" type="email" className="mt-1 py-6 block w-full" />
+                        <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={e => {setEmail(e.target.value)}}
+                            className="mt-1 py-6 block w-full" />
                     </div>
 
                     {/* 비밀번호 */}
@@ -38,21 +66,28 @@ const Login = () => {
                         <Label htmlFor="password" className="block text-sm font-bold text-gray-700">
                             비밀번호
                         </Label>
-                        <Input id="password" type="password" className="mt-1 py-6 block w-full" />
+                        <Input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={e => {setPassword(e.target.value)}}
+                            className="mt-1 py-6 block w-full" />
                     </div>
 
-                    <Button className="w-full bg-black py-6 rounded-3xl hover:opacity-70 text-white">
+                    <Button
+                        onClick={handleLogin}
+                        className="w-full bg-black py-6 rounded-3xl hover:opacity-70 text-white">
                         로그인
                     </Button>
 
-                    {/*<div className="flex justify-between items-center mt-4 text-sm text-gray-600">*/}
-                    {/*    <a href="/forgot-password" className="hover:underline">*/}
-                    {/*        비밀번호를 잊으셨나요?*/}
-                    {/*    </a>*/}
-                    {/*    <a href="/signup" className="hover:underline">*/}
-                    {/*        회원가입*/}
-                    {/*    </a>*/}
-                    {/*</div>*/}
+                    <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
+                        <a href="/forgot-password" className="hover:underline">
+                            비밀번호를 잊으셨나요?
+                        </a>
+                        <a href="/signup" className="hover:underline">
+                            회원가입
+                        </a>
+                    </div>
 
                     {/* 소셜 로그인 */}
                     <div className="mt-6">
