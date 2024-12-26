@@ -7,6 +7,7 @@ import Login from "@/pages/Login";
 import CreateMeeting from './pages/CreateMeeting';
 import MyPage from "@/pages/MyPage";
 import MeetingList from "@/pages/MeetingList";
+import Signup from "@/pages/Signup";
 
 function App() {
     return (
@@ -19,6 +20,7 @@ function App() {
                         <Route path="/create-meeting" element={<CreateMeeting />} />
                         <Route path="/my" element={<MyPage />} />
                         <Route path="/meeting-list" element={<MeetingList />} />
+                        <Route path="/signup" element={<Signup />} />
                     </Routes>
                 </ConditionalLayout>
             </BrowserRouter>

@@ -18,11 +18,16 @@ const Login = () => {
         }
 
         try {
-            await axios.post("/login", {
-                email: email,
-                password: password,
+            const formData = new URLSearchParams();
+            formData.append("email", email);
+            formData.append("password", password);
+
+            await axios.post("/login", formData, {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
             }).then(e => {
-                console.log(e);
+                localStorage.setItem('accessToken', e.headers.authorization);
             })
         } catch (error) {
             alert("로그인 중 문제가 발생했습니다.");
@@ -58,7 +63,8 @@ const Login = () => {
                             type="email"
                             value={email}
                             onChange={e => {setEmail(e.target.value)}}
-                            className="mt-1 py-6 block w-full" />
+                            className="mt-1 py-6 block w-full"
+                        />
                     </div>
 
                     {/* 비밀번호 */}
@@ -71,12 +77,14 @@ const Login = () => {
                             type="password"
                             value={password}
                             onChange={e => {setPassword(e.target.value)}}
-                            className="mt-1 py-6 block w-full" />
+                            className="mt-1 py-6 block w-full"
+                        />
                     </div>
 
                     <Button
                         onClick={handleLogin}
-                        className="w-full bg-black py-6 rounded-3xl hover:opacity-70 text-white">
+                        className="w-full bg-black py-6 rounded-3xl hover:opacity-70 text-white"
+                    >
                         로그인
                     </Button>
 
@@ -84,7 +92,7 @@ const Login = () => {
                         <a href="/forgot-password" className="hover:underline">
                             비밀번호를 잊으셨나요?
                         </a>
-                        <a href="/signup" className="hover:underline">
+                        <a href="/src/pages/Signup" className="hover:underline">
                             회원가입
                         </a>
                     </div>
