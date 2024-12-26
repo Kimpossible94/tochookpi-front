@@ -92,7 +92,7 @@ const Login = () => {
                         <a href="/forgot-password" className="hover:underline">
                             비밀번호를 잊으셨나요?
                         </a>
-                        <a href="/src/pages/Signup" className="hover:underline">
+                        <a href="/signup" className="hover:underline">
                             회원가입
                         </a>
                     </div>

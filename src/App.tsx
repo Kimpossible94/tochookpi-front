@@ -34,14 +34,14 @@ export default App;
 function ConditionalLayout({ children }: { children: React.ReactNode }) {
     const location = useLocation();
 
-    // 로그인 페이지에서는 Header와 Footer를 렌더링하지 않음
-    const shouldShowLayout = location.pathname !== "/login";
+    // 아래에 해당하는 페이지에서는 Header와 Footer를 렌더링하지 않음
+    const shouldShowLayout = ["/login", "/signup"].includes(location.pathname);
 
     return (
         <>
-            {shouldShowLayout && <Header />}
+            {!shouldShowLayout && <Header />}
             <main>{children}</main>
-            {shouldShowLayout && <Footer />}
+            {!shouldShowLayout && <Footer />}
         </>
     );
 }
