@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -14,8 +14,8 @@ import axios from "axios"
 // Zod validation schema
 const FormSchema = z.object({
     name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다."),
-    phone: z.string().min(10, "휴대폰 번호는 최소 10자리여야 합니다."),
-    email: z.string().email("이메일 형식이 올바르지 않습니다."),
+    phone: z.string().nonempty("휴대폰 번호는 필수값입니다."),
+    email: z.string().email("이메일 형식이 올바르지 않습니다.").or(z.literal("")),
     password: z
         .string()
         .min(8, "비밀번호는 8자리 이상이어야 합니다.")
@@ -30,6 +30,9 @@ const FormSchema = z.object({
 export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [isCodeSent, setIsCodeSent] = useState(false)
+    const [verificationCode, setVerificationCode] = useState("")
+    const [isPhoneVerified, setIsPhoneVerified] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const form = useForm({
@@ -43,11 +46,38 @@ export default function SignupPage() {
         },
     })
 
-    const { handleSubmit, control, formState: { errors } } = form
+    const { handleSubmit, control, formState: { errors } } = form;
+
+    const sendVerificationCode = async () => {
+        const phone = form.getValues("phone")
+        try {
+            await axios.post("auth/verification-code", { phone })
+            setIsCodeSent(true)
+        } catch (error) {
+            setError("인증 코드를 전송하지 못했습니다. 다시 시도하세요.")
+        }
+    }
+
+    const verifyCode = async () => {
+        const phone = form.getValues("phone")
+        try {
+            await axios.get("auth/verification-code", {
+                params: {phone, code: verificationCode}
+            })
+            setIsPhoneVerified(true)
+        } catch (error) {
+            setError("인증 코드가 올바르지 않습니다.")
+        }
+    }
 
     const onSubmit = async (data: any) => {
+        if (!isPhoneVerified) {
+            setError("휴대폰 인증이 완료되지 않았습니다.")
+            return
+        }
+
         try {
-            const response = await axios.post("/signup", data)
+            // const response = await axios.post("/signup", data)
         } catch (error) {
             setError("회원가입 중 문제가 발생했습니다.")
         }
@@ -89,14 +119,42 @@ export default function SignupPage() {
                         <Label htmlFor="phone" className="block text-sm font-bold text-gray-700">
                             휴대폰 번호
                         </Label>
-                        <Input
-                            {...form.register("phone")}
-                            id="phone"
-                            type="tel"
-                            className="mt-1 py-6 block w-full"
-                        />
+                        <div className="flex gap-2">
+                            <Input
+                                {...form.register("phone")}
+                                id="phone"
+                                type="tel"
+                                disabled={isPhoneVerified}
+                                className="mt-1 py-6 block w-full"
+                            />
+                            <Button
+                                onClick={sendVerificationCode}
+                                disabled={isPhoneVerified}
+                                className="mt-1 py-6"
+                            >
+                                {isCodeSent ? "코드 재전송" : "코드 전송"}
+                            </Button>
+                        </div>
+                        {(isCodeSent && !isPhoneVerified) && <p className="text-sm">코드가 전송되었습니다.</p>}
+                        {isPhoneVerified && <p className="text-sm text-green-500">휴대폰 인증이 완료되었습니다.</p>}
                         {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
                     </div>
+
+
+                    {/* 인증 코드 입력 */}
+                    {isCodeSent && !isPhoneVerified && (
+                        <div className="mb-4">
+                            <Label htmlFor="verificationCode">인증 코드</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="verificationCode"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                />
+                                <Button onClick={verifyCode}>확인</Button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* 이메일 */}
                     <div className="mb-4">
@@ -168,6 +226,20 @@ export default function SignupPage() {
                         )}
                     </div>
 
+                    {/* 에러 메시지 */}
+                    {error && (
+                        <div className="flex items-center justify-center mb-4">
+                            <Alert
+                                variant="destructive"
+                                className="bg-white"
+                            >
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+
                     <Button
                         onClick={handleSubmit(onSubmit)}
                         className="w-full bg-black py-6 rounded-3xl hover:opacity-70 text-white"
@@ -180,21 +252,6 @@ export default function SignupPage() {
                             이미 계정이 있으신가요? 로그인
                         </a>
                     </div>
-
-                    {/* 에러 메시지 */}
-                    {error && (
-                        <div className="flex items-center justify-center">
-                            <Alert
-                                variant="destructive"
-                                className="fixed bottom-10 w-fit bg-white"
-                                onClick={() => setError(null)}
-                            >
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
