@@ -51,6 +51,7 @@ export default function SignupPage() {
     const sendVerificationCode = async () => {
         const phone = form.getValues("phone")
         try {
+            console.log(phone);
             await axios.post("auth/verification-code", { phone })
             setIsCodeSent(true)
         } catch (error) {
@@ -61,9 +62,7 @@ export default function SignupPage() {
     const verifyCode = async () => {
         const phone = form.getValues("phone")
         try {
-            await axios.get("auth/verification-code", {
-                params: {phone, code: verificationCode}
-            })
+            await axios.post("auth/verification-code/verify", {phone, verificationCode: verificationCode})
             setIsPhoneVerified(true)
         } catch (error) {
             setError("인증 코드가 올바르지 않습니다.")
