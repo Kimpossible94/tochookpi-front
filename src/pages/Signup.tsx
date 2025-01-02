@@ -76,8 +76,12 @@ export default function SignupPage() {
         }
 
         try {
-            // const response = await axios.post("/signup", data)
+            await axios.post("/users", data)
+                .then(response => {
+                    console.log(response);
+                })
         } catch (error) {
+            console.log(error);
             setError("회원가입 중 문제가 발생했습니다.")
         }
     }
@@ -99,61 +103,6 @@ export default function SignupPage() {
                     <div className="flex flex-col justify-start">
                         <p className="text-2xl font-bold text-left my-6">회원가입</p>
                     </div>
-
-                    {/* 이름 */}
-                    <div className="mb-4">
-                        <Label htmlFor="name" className="block text-sm font-bold text-gray-700">
-                            이름
-                        </Label>
-                        <Input
-                            {...form.register("name")}
-                            id="name"
-                            className="mt-1 py-6 block w-full"
-                        />
-                        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-                    </div>
-
-                    {/* 휴대폰 번호 */}
-                    <div className="mb-4">
-                        <Label htmlFor="phone" className="block text-sm font-bold text-gray-700">
-                            휴대폰 번호
-                        </Label>
-                        <div className="flex gap-2">
-                            <Input
-                                {...form.register("phone")}
-                                id="phone"
-                                type="tel"
-                                disabled={isPhoneVerified}
-                                className="mt-1 py-6 block w-full"
-                            />
-                            <Button
-                                onClick={sendVerificationCode}
-                                disabled={isPhoneVerified}
-                                className="mt-1 py-6"
-                            >
-                                {isCodeSent ? "코드 재전송" : "코드 전송"}
-                            </Button>
-                        </div>
-                        {(isCodeSent && !isPhoneVerified) && <p className="text-sm">코드가 전송되었습니다.</p>}
-                        {isPhoneVerified && <p className="text-sm text-green-500">휴대폰 인증이 완료되었습니다.</p>}
-                        {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
-                    </div>
-
-
-                    {/* 인증 코드 입력 */}
-                    {isCodeSent && !isPhoneVerified && (
-                        <div className="mb-4">
-                            <Label htmlFor="verificationCode">인증 코드</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="verificationCode"
-                                    value={verificationCode}
-                                    onChange={(e) => setVerificationCode(e.target.value)}
-                                />
-                                <Button onClick={verifyCode}>확인</Button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* 이메일 */}
                     <div className="mb-4">
@@ -224,6 +173,61 @@ export default function SignupPage() {
                             <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
                         )}
                     </div>
+
+                    {/* 이름 */}
+                    <div className="mb-4">
+                        <Label htmlFor="name" className="block text-sm font-bold text-gray-700">
+                            이름
+                        </Label>
+                        <Input
+                            {...form.register("name")}
+                            id="name"
+                            className="mt-1 py-6 block w-full"
+                        />
+                        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+                    </div>
+
+                    {/* 휴대폰 번호 */}
+                    <div className="mb-4">
+                        <Label htmlFor="phone" className="block text-sm font-bold text-gray-700">
+                            휴대폰 번호
+                        </Label>
+                        <div className="flex gap-2">
+                            <Input
+                                {...form.register("phone")}
+                                id="phone"
+                                type="tel"
+                                disabled={isPhoneVerified}
+                                className="mt-1 py-6 block w-full"
+                            />
+                            <Button
+                                onClick={sendVerificationCode}
+                                disabled={isPhoneVerified}
+                                className="mt-1 py-6"
+                            >
+                                {isCodeSent ? "코드 재전송" : "코드 전송"}
+                            </Button>
+                        </div>
+                        {(isCodeSent && !isPhoneVerified) && <p className="text-sm">코드가 전송되었습니다.</p>}
+                        {isPhoneVerified && <p className="text-sm text-green-500">휴대폰 인증이 완료되었습니다.</p>}
+                        {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
+                    </div>
+
+
+                    {/* 인증 코드 입력 */}
+                    {isCodeSent && !isPhoneVerified && (
+                        <div className="mb-4">
+                            <Label htmlFor="verificationCode">인증 코드</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="verificationCode"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                />
+                                <Button onClick={verifyCode}>확인</Button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* 에러 메시지 */}
                     {error && (
