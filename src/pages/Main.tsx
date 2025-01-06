@@ -8,6 +8,7 @@ import {Link} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import {Meeting, MeetingSection} from "@/types/meeting";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
+import axios from "axios";
 
 const hotMeetings: Meeting[] = [
     {
@@ -117,6 +118,19 @@ const meetings: MeetingSection[] = [
 ]
 
 const Main = () => {
+
+    // 로그인 요청 함수
+    const handleJoinMeeting = async (meetingId: string) => {
+        try {
+            await axios.post("meetings/join", {id: meetingId})
+            .then(e => {
+                console.log(e);
+            })
+        } catch (error) {
+            alert("로그인 중 문제가 발생했습니다.");
+        }
+    }
+
     return (
         <div className="p-6 space-y-10 pt-20">
             <section className="text-center my-20">
@@ -192,7 +206,12 @@ const Main = () => {
                                             <MeetingDetail meetingId={meeting.id} />
                                         </DialogContent>
                                     </Dialog>
-                                    <Button className="bg-red-400 hover:bg-red-400 hover:opacity-80">모임 참가</Button>
+                                    <Button
+                                        className="bg-red-400 hover:bg-red-400 hover:opacity-80"
+                                        onClick={() => handleJoinMeeting(meeting.id)}
+                                    >
+                                        모임 참가
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         ))}
