@@ -1,21 +1,22 @@
 "use client"
 
-import {useEffect, useState} from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {AlertCircle, Eye, EyeOff } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {useState} from "react"
+import {useForm} from "react-hook-form"
+import {zodResolver} from "@hookform/resolvers/zod"
+import {z} from "zod"
+import {Button} from "@/components/ui/button"
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert"
+import {AlertCircle, Eye, EyeOff} from "lucide-react"
+import {Input} from "@/components/ui/input"
+import {Label} from "@/components/ui/label"
+import {useNavigate} from "react-router-dom"
 import axios from "axios"
 
 // Zod validation schema
 const FormSchema = z.object({
     name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다."),
     phone: z.string().nonempty("휴대폰 번호는 필수값입니다."),
-    email: z.string().email("이메일 형식이 올바르지 않습니다.").or(z.literal("")),
+    email: z.string().nonempty("이메일은 필수값입니다.").email("이메일 형식이 올바르지 않습니다."),
     password: z
         .string()
         .min(8, "비밀번호는 8자리 이상이어야 합니다.")
@@ -34,6 +35,7 @@ export default function SignupPage() {
     const [verificationCode, setVerificationCode] = useState("")
     const [isPhoneVerified, setIsPhoneVerified] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const navigate = useNavigate();
 
     const form = useForm({
         resolver: zodResolver(FormSchema),
@@ -51,7 +53,6 @@ export default function SignupPage() {
     const sendVerificationCode = async () => {
         const phone = form.getValues("phone")
         try {
-            console.log(phone);
             await axios.post("auth/verification-code", { phone })
             setIsCodeSent(true)
         } catch (error) {
@@ -74,14 +75,14 @@ export default function SignupPage() {
             setError("휴대폰 인증이 완료되지 않았습니다.")
             return
         }
+        delete data.confirmPassword;
 
         try {
             await axios.post("/users", data)
                 .then(response => {
-                    console.log(response);
+                    navigate('/login')
                 })
         } catch (error) {
-            console.log(error);
             setError("회원가입 중 문제가 발생했습니다.")
         }
     }
