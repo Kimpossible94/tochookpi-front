@@ -118,16 +118,18 @@ const meetings: MeetingSection[] = [
 ]
 
 const Main = () => {
-
-    // 로그인 요청 함수
     const handleJoinMeeting = async (meetingId: string) => {
+        const token = localStorage.getItem('accessToken');
+
         try {
-            await axios.post("meetings/join", {id: meetingId})
+            await axios.post("meetings/join",
+                {id: meetingId},
+                {headers: {'Authorization': token}})
             .then(e => {
                 console.log(e);
             })
         } catch (error) {
-            alert("로그인 중 문제가 발생했습니다.");
+            console.log(error);
         }
     }
 
