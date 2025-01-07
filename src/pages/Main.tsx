@@ -9,6 +9,8 @@ import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import {Meeting, MeetingSection} from "@/types/meeting";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 import axios from "axios";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 const hotMeetings: Meeting[] = [
     {
@@ -118,19 +120,57 @@ const meetings: MeetingSection[] = [
 ]
 
 const Main = () => {
-    const handleJoinMeeting = async (meetingId: string) => {
-        const token = localStorage.getItem('accessToken');
+    const instance = axios.create();
 
-        try {
-            await axios.post("meetings/join",
-                {id: meetingId},
-                {headers: {'Authorization': token}})
-            .then(e => {
-                console.log(e);
-            })
-        } catch (error) {
-            console.log(error);
+    // 요청 인터셉터
+    instance.interceptors.request.use((config) => {
+        const token = localStorage.getItem('accessToken');
+        config.headers["Authorization"] = `Bearer ${token}`;
+        return config;
+    }, (error) => {
+        return Promise.reject(error);
+    });
+
+    // 응답 인터셉터
+
+    instance.interceptors.response.use((response) => {
+            return response
+        }, async (error) => {
+            const originalRequest = error.config;
+
+            // 토큰 만료 에러 (500 Unauthorized, 우선 백엔드에서 500에러로 처리중 추후에 403 또는 401로 변경해야함)
+            if (error.response.status === 500) {
+                try {
+                    await axios.post("auth/refresh",
+                        {},
+                        {withCredentials: true}
+                    ).then(e => {
+                        console.log(e.data);
+                        const newAccessToken = e.data.accessToken;
+                        localStorage.setItem("accessToken", newAccessToken);
+
+                        // 실패했던 요청의 Authorization 헤더에 새로운 토큰 설정
+                        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+                        // 실패했던 요청을 다시 시도
+                        return instance(originalRequest);
+                    }, (error) => {
+                        return Promise.reject(error);
+                    });
+                } catch (refreshError) {
+                    localStorage.removeItem("accessToken");
+                    return Promise.reject(error);
+                }
+            }
+            return Promise.reject(error);
         }
+    );
+
+    const handleJoinMeeting = async (meetingId: string) => {
+        try {
+            await instance.post("meetings/join",
+                {id: meetingId},)
+            .then(e => {})
+        } catch (error) {}
     }
 
     return (
