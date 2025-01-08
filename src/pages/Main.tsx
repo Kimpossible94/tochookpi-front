@@ -125,32 +125,28 @@ const Main = () => {
     // 요청 인터셉터
     instance.interceptors.request.use((config) => {
         const token = localStorage.getItem('accessToken');
-        config.headers["Authorization"] = `Bearer ${token}`;
+        config.headers["Authorization"] = token;
         return config;
     }, (error) => {
         return Promise.reject(error);
     });
 
     // 응답 인터셉터
-
     instance.interceptors.response.use((response) => {
             return response
         }, async (error) => {
             const originalRequest = error.config;
+            if ((error.response.status === 401 || error.response.status === 500) && !originalRequest._retry) {
+                originalRequest._retry = true; // 무한 요청 방지 플래그 설정
 
-            // 토큰 만료 에러 (500 Unauthorized, 우선 백엔드에서 500에러로 처리중 추후에 403 또는 401로 변경해야함)
-            if (error.response.status === 500) {
                 try {
                     await axios.post("auth/refresh",
                         {},
                         {withCredentials: true}
                     ).then(e => {
-                        console.log(e.data);
-                        const newAccessToken = e.data.accessToken;
-                        localStorage.setItem("accessToken", newAccessToken);
+                        const newAccessToken = e.headers.authorization;
+                        localStorage.setItem('accessToken', newAccessToken);
 
-                        // 실패했던 요청의 Authorization 헤더에 새로운 토큰 설정
-                        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
                         // 실패했던 요청을 다시 시도
                         return instance(originalRequest);
                     }, (error) => {
