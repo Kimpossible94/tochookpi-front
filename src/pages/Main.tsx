@@ -8,9 +8,7 @@ import {Link} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import {Meeting, MeetingSection} from "@/types/meeting";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
-import axios from "axios";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
+import api from "@/services/api";
 
 const hotMeetings: Meeting[] = [
     {
@@ -120,50 +118,9 @@ const meetings: MeetingSection[] = [
 ]
 
 const Main = () => {
-    const instance = axios.create();
-
-    // 요청 인터셉터
-    instance.interceptors.request.use((config) => {
-        const token = localStorage.getItem('accessToken');
-        config.headers["Authorization"] = token;
-        return config;
-    }, (error) => {
-        return Promise.reject(error);
-    });
-
-    // 응답 인터셉터
-    instance.interceptors.response.use((response) => {
-            return response
-        }, async (error) => {
-            const originalRequest = error.config;
-            if ((error.response.status === 401 || error.response.status === 500) && !originalRequest._retry) {
-                originalRequest._retry = true; // 무한 요청 방지 플래그 설정
-
-                try {
-                    await axios.post("auth/refresh",
-                        {},
-                        {withCredentials: true}
-                    ).then(e => {
-                        const newAccessToken = e.headers.authorization;
-                        localStorage.setItem('accessToken', newAccessToken);
-
-                        // 실패했던 요청을 다시 시도
-                        return instance(originalRequest);
-                    }, (error) => {
-                        return Promise.reject(error);
-                    });
-                } catch (refreshError) {
-                    localStorage.removeItem("accessToken");
-                    return Promise.reject(error);
-                }
-            }
-            return Promise.reject(error);
-        }
-    );
-
     const handleJoinMeeting = async (meetingId: string) => {
         try {
-            await instance.post("meetings/join",
+            await api.post("meetings/join",
                 {id: meetingId},)
             .then(e => {})
         } catch (error) {}

@@ -10,7 +10,7 @@ import {AlertCircle, Eye, EyeOff} from "lucide-react"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {useNavigate} from "react-router-dom"
-import axios from "axios"
+import api from "@/services/api";
 
 // Zod validation schema
 const FormSchema = z.object({
@@ -53,7 +53,7 @@ export default function SignupPage() {
     const sendVerificationCode = async () => {
         const phone = form.getValues("phone")
         try {
-            await axios.post("auth/verification-code", { phone })
+            await api.post("auth/verification-code", { phone })
             setIsCodeSent(true)
         } catch (error) {
             setError("인증 코드를 전송하지 못했습니다. 다시 시도하세요.")
@@ -63,7 +63,7 @@ export default function SignupPage() {
     const verifyCode = async () => {
         const phone = form.getValues("phone")
         try {
-            await axios.post("auth/verification-code/verify", {phone, verificationCode: verificationCode})
+            await api.post("auth/verification-code/verify", {phone, verificationCode: verificationCode})
             setIsPhoneVerified(true)
         } catch (error) {
             setError("인증 코드가 올바르지 않습니다.")
@@ -78,7 +78,7 @@ export default function SignupPage() {
         delete data.confirmPassword;
 
         try {
-            await axios.post("/users", data)
+            await api.post("/users", data)
                 .then(response => {
                     navigate('/login')
                 })
