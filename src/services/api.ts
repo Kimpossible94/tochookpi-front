@@ -7,17 +7,19 @@ instance.interceptors.request.use((config) => {
     if(token != null) {
         config.headers["Authorization"] = token;
     }
+
     return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+}, (error) => Promise.reject(error));
 
 // 응답 인터셉터
-instance.interceptors.response.use((response) => {
-    return response;
-}, async (error) => {
+instance.interceptors.response.use((response) => response, async (error) => {
     const originalRequest = error.config;
-    if ((error.response.status === 401 || error.response.status === 400) && !originalRequest._retry) {
+    const errorCode = error.response?.data?.code;
+
+    if ((errorCode === 'AUTH-001' || errorCode === 'AUTH-002'
+        || errorCode === 'AUTH-003' || errorCode === 'AUTH-004')
+        && !originalRequest._retry) {
+
         originalRequest._retry = true;
         try {
             const refreshResponse = await axios.post("auth/refresh", {}, { withCredentials: true });
@@ -29,7 +31,7 @@ instance.interceptors.response.use((response) => {
             return instance(originalRequest);
         } catch (refreshError) {
             localStorage.removeItem("accessToken");
-            window.location.href = "/login"; // 로그인 페이지 경로
+            window.location.href = "/login"; // 로그인 페이지로 이동
             return Promise.reject(refreshError);
         }
     }
