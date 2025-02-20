@@ -17,7 +17,7 @@ instance.interceptors.response.use((response) => {
     return response;
 }, async (error) => {
     const originalRequest = error.config;
-    if ((error.response.status === 401 || error.response.status === 500) && !originalRequest._retry) {
+    if ((error.response.status === 401 || error.response.status === 400) && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
             const refreshResponse = await axios.post("auth/refresh", {}, { withCredentials: true });
@@ -29,6 +29,7 @@ instance.interceptors.response.use((response) => {
             return instance(originalRequest);
         } catch (refreshError) {
             localStorage.removeItem("accessToken");
+            window.location.href = "/login"; // 로그인 페이지 경로
             return Promise.reject(refreshError);
         }
     }

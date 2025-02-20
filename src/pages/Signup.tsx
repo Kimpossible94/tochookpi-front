@@ -51,10 +51,19 @@ export default function SignupPage() {
     const { handleSubmit, control, formState: { errors } } = form;
 
     const sendVerificationCode = async () => {
-        const phone = form.getValues("phone")
+        const phone = form.getValues("phone");
+        if(phone === '') {
+            form.setError("phone", {
+                type: "manual",
+                message: "휴대폰 번호는 필수값입니다.",
+            });
+            return;
+        }
         try {
-            await api.post("auth/verification-code", { phone })
-            setIsCodeSent(true)
+            await api.post("auth/verification-code", { phone }).then(() => {
+                form.clearErrors("phone");
+                setIsCodeSent(true);
+            })
         } catch (error) {
             setError("인증 코드를 전송하지 못했습니다. 다시 시도하세요.")
         }
