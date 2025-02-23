@@ -1,12 +1,11 @@
 import {useEffect, useState} from "react";
-import {Navigate, Outlet, useLocation} from "react-router-dom";
+import {Navigate, Outlet} from "react-router-dom";
 import axios from "axios";
 
-const PrivateRoute = () => {
+const PublicRoute = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    const location = useLocation();
 
-    useEffect(() => {
+    useEffect((): void => {
         const checkAuth = async () => {
             try {
                 const accessToken = localStorage.getItem("accessToken");
@@ -42,7 +41,7 @@ const PrivateRoute = () => {
 
     if (isAuthenticated === null) return <div>Loading...</div>;
 
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace state={{ from: location }} />;
+    return isAuthenticated ? <Navigate to="/" /> : <Outlet /> ;
 };
 
-export default PrivateRoute;
+export default PublicRoute;

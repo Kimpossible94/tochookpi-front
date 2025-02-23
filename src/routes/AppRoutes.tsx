@@ -7,11 +7,14 @@ import MyPage from "@/pages/MyPage";
 import CreateMeeting from "@/pages/CreateMeeting";
 import MeetingList from "@/pages/MeetingList";
 import React from "react";
+import PublicRoute from "@/components/common/PublicRoute";
 
 const AppRoutes = () => (
     <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+        </Route>
 
         <Route element={<PrivateRoute />}>
             <Route path="/" element={<Main />} />

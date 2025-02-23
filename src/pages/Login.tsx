@@ -4,13 +4,15 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import kakaoLoginBtn from "@/assets/kakao_login_medium_narrow.png";
 import naverLoginBtn from "@/assets/naver_login.png";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import api from "@/services/api";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
 
     // 로그인 요청 함수
     const handleLogin = async () => {
@@ -30,7 +32,7 @@ const Login = () => {
                 },
             }).then(e => {
                 localStorage.setItem('accessToken', e.headers.authorization);
-                navigate("/");
+                navigate(from, { replace: true});
             })
         } catch (error) {
             alert("로그인 중 문제가 발생했습니다.");

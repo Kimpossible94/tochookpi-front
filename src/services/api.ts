@@ -16,10 +16,7 @@ instance.interceptors.response.use((response) => response, async (error) => {
     const originalRequest = error.config;
     const errorCode = error.response?.data?.code;
 
-    if ((errorCode === 'AUTH-001' || errorCode === 'AUTH-002'
-        || errorCode === 'AUTH-003' || errorCode === 'AUTH-004')
-        && !originalRequest._retry) {
-
+    if (['AUTH-001', 'AUTH-002', 'AUTH-003','AUTH-004'].includes(errorCode) && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
             const refreshResponse = await axios.post("auth/refresh", {}, { withCredentials: true });
