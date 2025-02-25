@@ -142,11 +142,12 @@ const Main = () => {
             </section>
 
             {meetings.map((subject, idx) => (
-                <section>
+                <section key={subject.subject}>
                     <h2 className="text-xl font-bold mb-4">{subject.subjectName}</h2>
                     <HorizontalScroll>
                         {subject.children.map((meeting, idx) => (
                             <Card
+                                key={meeting.id}
                                 className="min-w-[150px] md:min-w-[250px] lg:min-w-[350px] mr-10 flex flex-col justify-between">
                                 <CardHeader>
                                     <CardTitle>{meeting.title}</CardTitle>
@@ -159,9 +160,9 @@ const Main = () => {
                                             <div className="flex space-x-1.5">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                                      fill="currentColor" className="size-6">
-                                                    <path fill-rule="evenodd"
+                                                    <path fillRule="evenodd"
                                                           d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
-                                                          clip-rule="evenodd"/>
+                                                          clipRule="evenodd"/>
                                                 </svg>
                                                 <strong>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</strong>
                                             </div>
@@ -194,7 +195,7 @@ const Main = () => {
                                 </CardContent>
                                 <CardFooter className="flex justify-between">
                                     <Dialog>
-                                        <DialogTrigger>
+                                        <DialogTrigger asChild>
                                             <Button variant="outline">자세히</Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-full max-h-full sm:max-w-[80%] sm:max-h-[80%] w-full h-full">
