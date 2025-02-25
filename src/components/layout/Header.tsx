@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Link} from "react-router-dom";
-import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
+import {Avatar, AvatarImage} from "../ui/avatar";
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -156,11 +156,11 @@ const Header = () => {
                     )}
                 </div>
 
-                {/* 사용자 아바타 */}
-                <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
+                <Link to="/my">
+                    <Avatar className="cursor-pointer">
+                        <AvatarImage src="https://github.com/shadcn.png" />
+                    </Avatar>
+                </Link>
             </div>
         </header>
     );
