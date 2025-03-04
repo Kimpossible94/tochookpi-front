@@ -6,6 +6,8 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import api from "@/services/api";
+import {Command, CommandEmpty, CommandInput, CommandList} from "@/components/ui/command";
+import {Pencil, X} from "lucide-react";
 
 type MyInfoProps = {
     userInfo?: UserInfo;
@@ -15,7 +17,10 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
     const [bio, setBio] = React.useState(userInfo?.bio || "");
     const [address, setAddress] = React.useState(userInfo?.address || "");
     const [searchTerm, setSearchTerm] = React.useState("");
-    const [searchResults, setSearchResults] = React.useState<string[]>([]);
+    const [searchResults, setSearchResults] = React.useState<any[]>([]);
+    const [isSearchResultsEmpty, setIsSearchREsultEmpty] = React.useState<boolean>(false);
+    const [isEditingAddress, setIsEditingAddress] = React.useState(false);
+
     const MAX_CHAR = 500;
 
     const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -26,13 +31,42 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
     };
 
     const handleSearch = async () => {
-        if (!searchTerm.trim()) return;
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            setIsSearchREsultEmpty(true);
+            return;
+        }
 
         try {
             const response = await api.get(`/naver/search/local?query=${searchTerm}`);
+            if(response.data.length <= 0) {
+                setSearchResults([]);
+                setIsSearchREsultEmpty(true);
+                return;
+            }
+
             setSearchResults(response.data);
+            setIsSearchREsultEmpty(false);
         } catch (error) {
             console.error("주소 검색 실패:", error);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            const updatedUserInfo = {
+                ...userInfo, // 기존 정보 유지
+                bio,         // 변경된 값만 덮어쓰기
+                address
+            };
+
+            const response = await api.put("/users", updatedUserInfo);
+
+            if (response.status === 200) {
+                alert("저장되었습니다.");
+            }
+        } catch (error) {
+            alert("저장 중 오류가 발생했습니다.");
         }
     };
 
@@ -52,42 +86,67 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
             </div>
 
             <div>
-                <Label className="block text-base font-semibold mb-2">주소 변경</Label>
-                <div className="flex space-x-2">
-                    <Input
-                        type="text"
-                        className="w-full border rounded-md p-2"
-                        placeholder="새 주소 입력"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                    />
-                    <Button onClick={handleSearch}>검색</Button>
+                <Label className="block text-base font-semibold mb-2">주소</Label>
+                <div className="px-4 py-2 border rounded-lg shadow-sm bg-gray-50 flex justify-between">
+                    <p className="text-gray-700 text-sm content-center">{address || "등록된 주소가 없습니다."}</p>
+                    <Button
+                        variant="outline"
+                        className="text-xs h-fit p-1.5"
+                        onClick={() => setIsEditingAddress(!isEditingAddress)}
+                    >
+                        {isEditingAddress ? <X /> : <Pencil />}
+                    </Button>
                 </div>
             </div>
 
-            <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                <Label className="block text-base font-semibold mb-2">현재 주소</Label>
-                <p className="text-gray-700">{address || "등록된 주소가 없습니다."}</p>
-            </div>
-
-            {searchResults.length > 0 && (
-                <div className="border rounded-lg p-3 mt-3 bg-white shadow">
-                    <Label className="block text-base font-semibold mb-2">검색 결과</Label>
-                    <ul className="space-y-2">
-                        {searchResults.map((addr, index) => (
-                            <li
-                                key={index}
-                                className="p-2 hover:bg-gray-100 cursor-pointer border-b"
-                                onClick={() => {
-                                    setAddress(addr);
-                                    setSearchResults([]);
-                                }}
-                            >
-                                {addr}
-                            </li>
-                        ))}
-                    </ul>
+            {isEditingAddress && (
+                <div className="mt-2">
+                    <Command className="rounded-lg border shadow-md md:min-w-[450px]">
+                        <CommandInput
+                            placeholder="새 주소 입력"
+                            value={searchTerm}
+                            onValueChange={(e) => setSearchTerm(e)}
+                            onKeyDown={e => e.key === "Enter" && handleSearch()}
+                        />
+                        <CommandList>
+                            {isSearchResultsEmpty && <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>}
+                            {searchResults.map((item, index) => (
+                                <div className="py-3 px-5 max-h-30" key={index}>
+                                    <div dangerouslySetInnerHTML={{__html: item.title}} />
+                                    <div className="text-sm text-gray-500 flex justify-between mt-2">
+                                        <span>지번: {item.address}</span>
+                                        <Button
+                                            variant="outline"
+                                            className="text-xs h-fit p-1"
+                                            onClick={() => {
+                                                setAddress(item.address);
+                                                setSearchTerm("");
+                                                setSearchResults([]);
+                                                setIsEditingAddress(false);
+                                            }}
+                                        >
+                                            선택
+                                        </Button>
+                                    </div>
+                                    <div className="text-sm text-gray-500 flex justify-between mt-2">
+                                        <span>도로명: {item.roadAddress}</span>
+                                        <Button
+                                            variant="outline"
+                                            className="text-xs h-fit p-1"
+                                            onClick={() => {
+                                                setAddress(item.roadAddress);
+                                                setSearchTerm("");
+                                                setSearchResults([]);
+                                                setIsEditingAddress(false);
+                                            }}
+                                        >
+                                            선택
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </CommandList>
+                    </Command>
                 </div>
             )}
 
@@ -108,7 +167,7 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
             </div>
 
             <div className="flex justify-end mt-4">
-                <Button>저장</Button>
+                <Button onClick={handleSave}>저장</Button>
             </div>
         </div>
     );
