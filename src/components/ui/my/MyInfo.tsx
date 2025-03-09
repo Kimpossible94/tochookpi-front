@@ -7,7 +7,7 @@ import {Label} from "@/components/ui/label";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import api from "@/services/api";
 import {Command, CommandEmpty, CommandInput, CommandList} from "@/components/ui/command";
-import {Pencil, X} from "lucide-react";
+import {Pencil, Save} from "lucide-react";
 
 type MyInfoProps = {
     userInfo?: UserInfo;
@@ -20,6 +20,8 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
     const [isSearchResultsEmpty, setIsSearchREsultEmpty] = React.useState<boolean>(false);
     const [isEditingAddress, setIsEditingAddress] = React.useState(false);
+    const [profileImage, setProfileImage] = React.useState<string | undefined>(userInfo?.profileImage);
+
 
     const MAX_CHAR = 500;
 
@@ -55,8 +57,8 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
     const handleSave = async () => {
         try {
             const updatedUserInfo = {
-                ...userInfo, // 기존 정보 유지
-                bio,         // 변경된 값만 덮어쓰기
+                ...userInfo,
+                bio,
                 address
             };
 
@@ -70,14 +72,48 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
         }
     };
 
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        if (file) {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await api.post("/upload", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+
+                if (response.status === 200) {
+                    setProfileImage(response.data.imageUrl);
+                }
+            } catch (error) {
+                console.error("이미지 업로드 실패:", error);
+            }
+        }
+    };
+
     return (
         <div className="flex flex-col space-y-6">
             <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
                     <AvatarImage src={userInfo?.profileImage || "https://github.com/shadcn.png"}/>
                 </Avatar>
-                <Button variant="outline">새로운 사진 업로드</Button>
-                <Button className="bg-red-500 hover:bg-red-700" variant="destructive">삭제</Button>
+                <input
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    className="hidden"
+                    id="profileImageUpload"
+                    onChange={handleFileChange}
+                />
+                <label htmlFor="profileImageUpload">
+                    <Button variant="outline">새로운 사진 업로드</Button>
+                </label>
+                <Button className="bg-red-500 hover:bg-red-700" variant="destructive">
+                    삭제
+                </Button>
             </div>
 
             <div>
@@ -87,14 +123,22 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
 
             <div>
                 <Label className="block text-base font-semibold mb-2">주소</Label>
-                <div className="px-4 py-2 border rounded-lg shadow-sm bg-gray-50 flex justify-between">
-                    <p className="text-gray-700 text-sm content-center">{address || "등록된 주소가 없습니다."}</p>
-                    <Button
+                <div className="px-4 py-2 border rounded-lg shadow-sm bg-gray-50 flex justify-between text-gray-700">
+                    {isEditingAddress ? (
+                        <Input
+                            className="w-full border-none shadow-none text-sm p-0 mr-3"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="주소를 입력하세요."
+                        />
+                    ) : (
+                        <p className="text-sm content-center">{address || "등록된 주소가 없습니다."}</p>
+                    )}                    <Button
                         variant="outline"
                         className="text-xs h-fit p-1.5"
                         onClick={() => setIsEditingAddress(!isEditingAddress)}
                     >
-                        {isEditingAddress ? <X /> : <Pencil />}
+                        {isEditingAddress ? <Save /> : <Pencil />}
                     </Button>
                 </div>
             </div>
@@ -122,7 +166,6 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
                                                 setAddress(item.address);
                                                 setSearchTerm("");
                                                 setSearchResults([]);
-                                                setIsEditingAddress(false);
                                             }}
                                         >
                                             선택
@@ -137,7 +180,6 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
                                                 setAddress(item.roadAddress);
                                                 setSearchTerm("");
                                                 setSearchResults([]);
-                                                setIsEditingAddress(false);
                                             }}
                                         >
                                             선택
