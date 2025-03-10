@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Meeting } from "@/types/meeting";
+import { Meeting } from "@/redux/types/meeting";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 

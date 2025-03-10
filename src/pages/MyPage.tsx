@@ -1,33 +1,20 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import SidebarMenu from "@/components/ui/SidebarMenu";
 import {MyInfo} from "@/components/ui/my/MyInfo";
 import {Settings} from "@/components/ui/my/Settings";
-import {UserInfo} from "@/types/user";
-import api from "@/services/api";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {useSelector} from "react-redux";
+import {RootState} from "@/redux/store";
 
 const MyPage = () => {
     const [selectedMenu, setSelectedMenu] = useState("내정보수정");
     const [selectedSubMenu, setSelectedSubMenu] = useState("내가만든모임");
-    const [userInfo, setUserInfo] = useState<UserInfo>();
-
-    useEffect(() => {
-        const fetchUserInfo = async () => {
-            try {
-                const response = await api.get("/users");
-                setUserInfo(response.data);
-            } catch (error) {
-                console.error("유저 정보 불러오기 실패", error);
-            }
-        };
-
-        fetchUserInfo();
-    }, []);
+    const { user } = useSelector((state: RootState) => state.user);
 
     const renderContent = () => {
         switch (selectedMenu) {
             case "내정보수정":
-                return <MyInfo userInfo={userInfo}/>;
+                return <MyInfo/>;
             // case "모임":
             //     return <MyMeetings subMenu={selectedSubMenu} />;
             case "기본설정":
@@ -62,11 +49,11 @@ const MyPage = () => {
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center space-x-4">
                         <Avatar className="w-24 h-24">
-                            <AvatarImage src={userInfo?.profileImage || 'https://github.com/shadcn.png'}/>
+                            <AvatarImage src={user?.profileImage || 'https://github.com/shadcn.png'}/>
                         </Avatar>
                         <div>
-                            <h1 className="text-2xl font-semibold">{userInfo?.username} / {selectedMenu}</h1>
-                            <p className="text-gray-500 truncate">{userInfo?.bio}</p>
+                            <h1 className="text-2xl font-semibold">{user?.username} / {selectedMenu}</h1>
+                            <p className="text-gray-500 truncate">{user?.bio}</p>
                         </div>
                     </div>
                 </div>

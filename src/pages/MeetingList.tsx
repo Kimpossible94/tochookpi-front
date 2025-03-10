@@ -1,5 +1,5 @@
 import React from "react";
-import {Meeting} from "@/types/meeting";
+import {Meeting} from "@/redux/types/meeting";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";

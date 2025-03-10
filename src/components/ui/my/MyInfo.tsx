@@ -1,6 +1,5 @@
 import * as React from "react";
 import {Button} from "@/components/ui/button";
-import {UserInfo} from "@/types/user";
 import {Textarea} from "@/components/ui/textarea";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -8,19 +7,20 @@ import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import api from "@/services/api";
 import {Command, CommandEmpty, CommandInput, CommandList} from "@/components/ui/command";
 import {Pencil, Save} from "lucide-react";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/redux/store";
+import {setUserInfo} from "@/redux/reducers/userSlice";
 
-type MyInfoProps = {
-    userInfo?: UserInfo;
-};
+export const MyInfo = () => {
+    const dispatch = useDispatch();
+    const { user } = useSelector((state: RootState) => state.user);
 
-export const MyInfo = ({ userInfo }: MyInfoProps) => {
-    const [bio, setBio] = React.useState(userInfo?.bio || "");
-    const [address, setAddress] = React.useState(userInfo?.address || "");
+    const [bio, setBio] = React.useState(user?.bio || "");
+    const [address, setAddress] = React.useState(user?.address || "");
     const [searchTerm, setSearchTerm] = React.useState("");
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
     const [isSearchResultsEmpty, setIsSearchREsultEmpty] = React.useState<boolean>(false);
     const [isEditingAddress, setIsEditingAddress] = React.useState(false);
-    const [profileImage, setProfileImage] = React.useState<string | undefined>(userInfo?.profileImage);
 
 
     const MAX_CHAR = 500;
@@ -57,14 +57,19 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
     const handleSave = async () => {
         try {
             const updatedUserInfo = {
-                ...userInfo,
+                ...user,
                 bio,
                 address
             };
 
             const response = await api.put("/users", updatedUserInfo);
 
-            if (response.status === 200) {
+            if (response.status === 200 && user) {
+                dispatch(setUserInfo({
+                    ...user,
+                    bio: bio,
+                    address: address,
+                }));
                 alert("저장되었습니다.");
             }
         } catch (error) {
@@ -80,14 +85,17 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
             formData.append("file", file);
 
             try {
-                const response = await api.post("/upload", formData, {
+                const response = await api.put("/users/profile", formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
                 });
 
-                if (response.status === 200) {
-                    setProfileImage(response.data.imageUrl);
+                if (response.status === 200 && user) {
+                    dispatch(setUserInfo({
+                        ...user,
+                        profileImage: response.data
+                    }));
                 }
             } catch (error) {
                 console.error("이미지 업로드 실패:", error);
@@ -99,18 +107,19 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
         <div className="flex flex-col space-y-6">
             <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                    <AvatarImage src={userInfo?.profileImage || "https://github.com/shadcn.png"}/>
+                    <AvatarImage src={user?.profileImage || "https://github.com/shadcn.png"}/>
                 </Avatar>
-                <input
+                <Input
                     type="file"
                     accept="image/png, image/jpeg"
                     className="hidden"
                     id="profileImageUpload"
                     onChange={handleFileChange}
                 />
-                <label htmlFor="profileImageUpload">
-                    <Button variant="outline">새로운 사진 업로드</Button>
-                </label>
+                <Label className="p-3 border border-gray-400 rounded-md"
+                       htmlFor="profileImageUpload">
+                    새로운 사진 업로드
+                </Label>
                 <Button className="bg-red-500 hover:bg-red-700" variant="destructive">
                     삭제
                 </Button>
@@ -118,7 +127,7 @@ export const MyInfo = ({ userInfo }: MyInfoProps) => {
 
             <div>
                 <Label className="block text-base font-semibold mb-2">이름</Label>
-                <Input type="text" className="w-full border rounded-md p-2" value={userInfo?.username} readOnly/>
+                <Input type="text" className="w-full border rounded-md p-2" value={user?.username} readOnly/>
             </div>
 
             <div>

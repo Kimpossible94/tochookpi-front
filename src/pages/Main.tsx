@@ -6,7 +6,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "../components/ui/tooltip";
 import {Link} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
-import {Meeting, MeetingSection} from "@/types/meeting";
+import {Meeting, MeetingSection} from "@/redux/types/meeting";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 import api from "@/services/api";
 

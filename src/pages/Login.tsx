@@ -6,6 +6,8 @@ import kakaoLoginBtn from "@/assets/kakao_login_medium_narrow.png";
 import naverLoginBtn from "@/assets/naver_login.png";
 import {useLocation, useNavigate} from "react-router-dom";
 import api from "@/services/api";
+import {loginSuccess} from "@/redux/reducers/userSlice";
+import {useDispatch} from "react-redux";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
+    const dispatch = useDispatch();
 
     // 로그인 요청 함수
     const handleLogin = async () => {
@@ -32,7 +35,11 @@ const Login = () => {
                 },
             }).then(e => {
                 localStorage.setItem('accessToken', e.headers.authorization);
-                navigate(from, { replace: true});
+
+                api.get("/users").then(response => {
+                    dispatch(loginSuccess(response.data));
+                    navigate(from, { replace: true});
+                });
             })
         } catch (error) {
             alert("로그인 중 문제가 발생했습니다.");
