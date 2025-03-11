@@ -5,8 +5,8 @@ interface SidebarMenuProps {
     selectedSubMenu: string;
     setSelectedMenu: (menu: string) => void;
     setSelectedSubMenu: (subMenu: string) => void;
-    menuItems: { name: string; value: string; subMenu?: { name: string; value: string }[] }[]; // 서브 메뉴 포함 가능
-    bottomItems?: { name: string; value: string }[]; // 하단에 추가될 항목들 (회원탈퇴 같은)
+    menuItems: { name: string; value: string; subMenu?: { name: string; value: string }[] }[];
+    bottomItems?: { name: string; value: string }[];
 }
 
 const SidebarMenu = ({
