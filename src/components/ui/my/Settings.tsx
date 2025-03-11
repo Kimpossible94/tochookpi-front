@@ -1,30 +1,45 @@
 import {Switch} from "@/components/ui/switch";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
 import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel} from "@/components/ui/form";
 import {Button} from "@/components/ui/button";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
+import {setUserSetting} from "@/redux/reducers/userSlice";
+import api from "@/services/api";
 
 const FormSchema = z.object({
-    is_notification_disabled: z.boolean().optional(),
-    is_invite_disabled: z.boolean().optional(),
+    isNotificationDisabled: z.boolean().optional(),
+    isInviteDisabled: z.boolean().optional(),
 })
 
 export const Settings = () => {
+    const dispatch = useDispatch();
     const { user } = useSelector((state: RootState) => state.user);
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            is_notification_disabled: false,
-            is_invite_disabled: false,
+            isNotificationDisabled: user?.userSetting?.isNotificationDisabled ?? false,
+            isInviteDisabled: user?.userSetting?.isInviteDisabled ?? false,
         },
     })
 
-    function onSubmit(data: z.infer<typeof FormSchema>) {
+    const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+        console.log(data);
+        api.put("/user-settings", data).then(response => {
+            if (response.status === 200) {
+                alert("저장되었습니다.");
 
+                dispatch(setUserSetting({
+                    isNotificationDisabled: data.isNotificationDisabled ?? false,
+                    isInviteDisabled: data.isInviteDisabled ?? false,
+                }))
+            }
+        }).catch(error => {
+            alert("저장 중 오류가 발생했습니다.");
+        })
     }
 
     return (
@@ -35,7 +50,7 @@ export const Settings = () => {
                         <div className="grid grid-cols-2 gap-2">
                             <FormField
                                 control={form.control}
-                                name="is_notification_disabled"
+                                name="isNotificationDisabled"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                                         <div className="space-y-0.5">
@@ -55,7 +70,7 @@ export const Settings = () => {
                             />
                             <FormField
                                 control={form.control}
-                                name="is_invite_disabled"
+                                name="isInviteDisabled"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                                         <div className="space-y-0.5">

@@ -1,4 +1,4 @@
-import {UserInfo} from "../types/user";
+import {UserInfo, UserSetting} from "../types/user";
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 
 interface UserState {
@@ -9,7 +9,6 @@ const initialState: UserState = {
     user: null,
 };
 
-// createSlice로 리듀서 정의
 const userSlice = createSlice({
     name: 'user',
     initialState,
@@ -23,9 +22,14 @@ const userSlice = createSlice({
         setUserInfo: (state, action: PayloadAction<UserInfo>) => {
             state.user = action.payload;
         },
+        setUserSetting: (state, action: PayloadAction<UserSetting>) => {
+            if (state.user) {
+                state.user.userSetting = action.payload;
+            }
+        },
     },
 });
 
-export const { loginSuccess, logout, setUserInfo } = userSlice.actions;
+export const { loginSuccess, logout, setUserInfo, setUserSetting } = userSlice.actions;
 
 export default userSlice.reducer;
