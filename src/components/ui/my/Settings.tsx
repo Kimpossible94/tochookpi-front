@@ -27,7 +27,6 @@ export const Settings = () => {
     })
 
     const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-        console.log(data);
         api.put("/user-settings", data).then(response => {
             if (response.status === 200) {
                 alert("저장되었습니다.");

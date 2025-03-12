@@ -5,6 +5,7 @@ import {Settings} from "@/components/ui/my/Settings";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
+import {DeleteAccount} from "@/components/ui/my/DeleteAccount";
 
 const MyPage = () => {
     const [selectedMenu, setSelectedMenu] = useState("내정보수정");
@@ -20,7 +21,7 @@ const MyPage = () => {
             case "기본설정":
                 return <Settings />;
             case "회원탈퇴":
-                return <div>회원탈퇴 페이지</div>;
+                return <DeleteAccount />;
             default:
                 return null;
         }
