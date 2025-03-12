@@ -12,6 +12,19 @@ import {
 } from "../ui/navigation-menu";
 import {cn} from "@/lib/utils";
 import {BellIcon} from "@radix-ui/react-icons";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/redux/store";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {LogOut, UserPen} from "lucide-react";
+import {loginSuccess, logoutSuccess} from "@/redux/reducers/userSlice";
+import api from "@/services/api";
 
 const components: { title: string; href: string; description: string }[] = [
     {
@@ -28,6 +41,8 @@ const components: { title: string; href: string; description: string }[] = [
 
 const Header = () => {
     const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+    const { user } = useSelector((state: RootState) => state.user);
+    const dispatch = useDispatch();
 
     // 현재 시간을 기준으로 시간 차이 계산 함수
     const calculateTimeDifference = (timestamp: Date) => {
@@ -62,8 +77,19 @@ const Header = () => {
         setIsNotificationsOpen(!isNotificationsOpen);
     };
 
+    const logout = async () => {
+        try {
+            await api.post("/auth/logout");
+            localStorage.removeItem("accessToken");
+            dispatch(logoutSuccess());
+            window.location.href = "/login";
+        } catch (error) {
+            alert("로그아웃에 실패했습니다.");
+        }
+    }
+
     return (
-        <header className="p-4 flex items-center justify-between fixed top-0 w-full bg-white z-50">
+        <header className="py-4 px-10 flex items-center justify-between fixed top-0 w-full bg-white z-50">
             {/* 로고 */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/" className="text-lg font-bold whitespace-nowrap font-custom">
@@ -156,11 +182,26 @@ const Header = () => {
                     )}
                 </div>
 
-                <Link to="/my">
-                    <Avatar className="cursor-pointer">
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                    </Avatar>
-                </Link>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Avatar className="cursor-pointer">
+                            <AvatarImage src={user?.profileImage || 'https://github.com/shadcn.png'} />
+                        </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-36">
+                        <Link to="/my">
+                            <DropdownMenuItem>
+                                My Page
+                                <DropdownMenuShortcut><UserPen className="w-4 h-4" /></DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" onClick={logout}>
+                            Log out
+                            <DropdownMenuShortcut><LogOut className="w-4 h-4" /></DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );
