@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import {useDispatch} from "react-redux";
+import {clearUser} from "@/redux/reducers/userSlice";
 
 export const DeleteAccount = () => {
     const confirmationText = "상기 사항을 확인했으며 회원탈퇴에 동의합니다.";
     const [deleteDisable, setDeleteDisable] = useState<boolean>(true);
+    const dispatch = useDispatch();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -18,6 +21,9 @@ export const DeleteAccount = () => {
             const response = await api.delete("/users");
             if (response.status === 200) {
                 alert("회원탈퇴가 완료되었습니다.");
+                dispatch(clearUser());
+                localStorage.removeItem("accessToken");
+                document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 window.location.href = "/";
             }
         } catch (error) {
@@ -38,9 +44,9 @@ export const DeleteAccount = () => {
                 <div className="items-center rounded-md shadow p-4 bg-white">
                     <div className="text-sm grid gap-2">
                         <p className="text-xl font-bold">안내사항</p>
-                        <p>❗프로필 정보(이름, 이메일, 프로필 사진 등)는 삭제됩니다.</p>
-                        <p>❗생성한 모임은 삭제되지 않고, 권한만 해당 모임의 다른 참여자에게 위임됩니다.</p>
-                        <p>❗탈퇴로 인해서 삭제되는 정보는 복구가 불가능합니다.</p>
+                        <p>❗ 프로필 정보(이름, 이메일, 프로필 사진 등)는 삭제됩니다.</p>
+                        <p>❗ 생성한 모임은 삭제되지 않고, 권한만 해당 모임의 다른 참여자에게 위임됩니다.</p>
+                        <p>❗ 탈퇴로 인해서 삭제되는 정보는 복구가 불가능합니다.</p>
                     </div>
 
                     <div className="text-sm mt-10">
