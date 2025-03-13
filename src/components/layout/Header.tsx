@@ -150,6 +150,7 @@ const Header = () => {
                         className="relative flex items-center justify-center p-2 text-gray-600 focus:outline-none"
                     >
                         <BellIcon />
+                        {/* TODO: https://ui.shadcn.com/docs/components/card 여기서 알림 카드 UI 따와서 적용하면 좋을듯*/}
                         {hasNotifications && (
                             <span className="absolute top-0 right-0 w-4 h-4 text-xs text-white bg-red-500 rounded-full flex items-center justify-center">
                                 {notifications.length}

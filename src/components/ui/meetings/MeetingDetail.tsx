@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Meeting } from "@/redux/types/meeting";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Spinner } from "@/components/ui/spinner";
+import React, {useEffect, useState} from "react";
+import {Meeting} from "@/redux/types/meeting";
+import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {Spinner} from "@/components/ui/spinner";
 
 interface MeetingDetailProps {
-    meetingId: string;
+    meetingId: number;
 }
 
 const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
@@ -18,16 +18,22 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                 // const response = await fetch(`/api/meetings/${meetingId}`);
                 // const data = await response.json();
                 // setMeeting(data);
-
-                setMeeting({
-                    id: "1", // 고유한 id 추가
-                    image: "/path/to/hot-meeting1.jpg",
-                    title: "서울 방탈출",
-                    description: "강남에서 방탈출할 사람~",
-                    currentParticipantsCnt: 2,
-                    maxParticipantsCnt: 15,
-                    participants: ["강광일", "김영범"]
-                });
+                setMeeting(
+                    {
+                        id: 2,
+                        title: '축구 모임',
+                        description: '주말마다 축구할 사람 모집합니다!',
+                        location: '서울 마포구',
+                        image: '',
+                        currentParticipantsCnt: 8,
+                        maxParticipantsCnt: 20,
+                        participants: [],
+                        period: { startDate: '2025-04-20', endDate: '2025-06-15' },
+                        schedules: [],
+                        status: 'BEFORE',
+                        review: [],
+                    },
+                );
             } catch (error) {
                 console.error("모임 데이터를 불러오는 중 오류 발생:", error);
             } finally {
@@ -61,12 +67,12 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
             <div className="mt-6">
                 <h3 className="text-xl font-semibold">참가자 정보</h3>
                 <div className="flex flex-wrap gap-2 mt-4">
-                    {meeting.participants.map((name, idx) => (
+                    {meeting.participants.map((user, idx) => (
                         <div key={idx} className="flex items-center space-x-2">
                             <Avatar>
                                 <AvatarImage src="https://github.com/shadcn.png" />
                             </Avatar>
-                            <span>{name}</span>
+                            <span>{user.username}</span>
                         </div>
                     ))}
                 </div>

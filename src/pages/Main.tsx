@@ -9,88 +9,210 @@ import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import {Meeting, MeetingSection} from "@/redux/types/meeting";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 import api from "@/services/api";
+import {UserSetting} from "@/redux/types/user";
 
 const hotMeetings: Meeting[] = [
     {
-        id: "1", // 고유한 id 추가
-        image: "/path/to/hot-meeting1.jpg",
-        title: "서울 방탈출",
-        description: "강남에서 방탈출할 사람~",
+        id: 1,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
         currentParticipantsCnt: 2,
         maxParticipantsCnt: 15,
-        participants: ["강광일", "김영범"]
+        participants: [
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+            {
+                username: 'string',
+                email: 'string',
+                profileImage: '',
+                bio: '',
+                address: '',
+                userSetting: null,
+            },
+        ],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
     {
-        id: "2", // 고유한 id 추가
-        image: "/path/to/hot-meeting2.jpg",
-        title: "방어회 먹자",
-        description: "가락시장역, 너만오면 고",
-        currentParticipantsCnt: 6,
-        maxParticipantsCnt: 25,
-        participants: ["강광일", "김영범", "방원", "엄윤호", "이헌", "김재훈"]
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
+        currentParticipantsCnt: 2,
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
 ];
 
 const recentMeetings: Meeting[] = [
     {
-        id: "3", // 고유한 id 추가
-        image: "/path/to/recent-meeting1.jpg",
-        title: "칼바람 전사 모집",
-        description: "전사의 심장이 울린다 둥둥둥..",
-        currentParticipantsCnt: 1,
-        maxParticipantsCnt: 10,
-        participants: ["김영범"]
-    },
-    {
-        id: "4", // 고유한 id 추가
-        image: "/path/to/recent-meeting2.jpg",
-        title: "전시회",
-        description: "고흐 전시회 갈사람..?",
-        currentParticipantsCnt: 2,
-        maxParticipantsCnt: 8,
-        participants: ["강광일", "방원"]
-    },
-    {
-        id: "5", // 고유한 id 추가
-        image: "/path/to/hot-meeting1.jpg",
-        title: "서울 방탈출",
-        description: "강남에서 방탈출할 사람~",
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
         currentParticipantsCnt: 2,
         maxParticipantsCnt: 15,
-        participants: ["강광일", "김영범"]
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
     {
-        id: "6", // 고유한 id 추가
-        image: "/path/to/hot-meeting2.jpg",
-        title: "방어회 먹자",
-        description: "가락시장역, 너만오면 고",
-        currentParticipantsCnt: 6,
-        maxParticipantsCnt: 25,
-        participants: ["강광일", "김영범", "방원", "엄윤호", "이헌", "김재훈", "김재훈", "김재훈", "김재훈"]
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
+        currentParticipantsCnt: 2,
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
+    },
+    {
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
+        currentParticipantsCnt: 2,
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
+    },
+    {
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
+        currentParticipantsCnt: 2,
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
 ];
 
 const gameMeetings: Meeting[] = [
     {
-        id: "7", // 고유한 id 추가
-        image: "/path/to/recent-meeting1.jpg",
-        title: "칼바람 전사 모집",
-        description: "전사의 심장이 울린다 둥둥둥..",
-        currentParticipantsCnt: 1,
-        maxParticipantsCnt: 10,
-        participants: ["김영범"]
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
+        currentParticipantsCnt: 2,
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
 ];
 
 const artExhibitionMeetings: Meeting[] = [
     {
-        id: "8", // 고유한 id 추가
-        image: "/path/to/recent-meeting2.jpg",
-        title: "전시회",
-        description: "고흐 전시회 갈사람..?",
+        id: 2,
+        title: '',
+        description: '서울 방탈출',
+        location: '',
+        image: '',
         currentParticipantsCnt: 2,
-        maxParticipantsCnt: 8,
-        participants: ["강광일", "방원"]
+        maxParticipantsCnt: 15,
+        participants: [],
+        period: { startDate: '', endDate: '' },
+        schedules: [],
+        status: 'BEFORE',
+        review: [],
     },
 ];
 
@@ -118,7 +240,7 @@ const meetings: MeetingSection[] = [
 ]
 
 const Main = () => {
-    const handleJoinMeeting = async (meetingId: string) => {
+    const handleJoinMeeting = async (meetingId: number) => {
         try {
             await api.post("meetings/join",
                 {id: meetingId},)
@@ -170,7 +292,7 @@ const Main = () => {
 
                                         {/* 참가자 리스트 */}
                                         <div className="flex flex-wrap gap-2 mt-2">
-                                            {meeting.participants.slice(0, 5).map((name, idx) => (
+                                            {meeting.participants.slice(0, 5).map((user, idx) => (
                                                 <TooltipProvider key={idx} delayDuration={0}>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
@@ -179,7 +301,7 @@ const Main = () => {
                                                             </Avatar>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>{name}</p>
+                                                            <p>{user.username}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
