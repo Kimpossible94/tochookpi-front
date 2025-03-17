@@ -89,7 +89,8 @@ const Header = () => {
     }
 
     return (
-        <header className="py-4 px-10 flex items-center justify-between fixed top-0 w-full bg-white z-50">
+        <header className="fixed top-0 w-full z-50 px-10 py-4 flex items-center justify-between 
+                          bg-transparent backdrop-blur-md">
             {/* 로고 */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/" className="text-lg font-bold whitespace-nowrap font-custom">
