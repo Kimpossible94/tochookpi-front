@@ -8,7 +8,7 @@ import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
-import tochookpiLogo from "@/assets/tochookpi_logo.svg";
+import logo from "@/assets/logo.png";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
@@ -64,7 +64,7 @@ const MeetingListPage: React.FC = () => {
                                 >
                                     <div className="flex items-center">
                                         <img
-                                            src={meeting.image !== '' ? meeting.image : tochookpiLogo}
+                                            src={meeting.image !== '' ? meeting.image : logo}
                                             alt={meeting.title}
                                             className="w-32 h-32 object-contain rounded-l-md"
                                         />

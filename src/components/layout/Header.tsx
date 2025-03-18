@@ -23,8 +23,9 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {LogOut, UserPen} from "lucide-react";
-import {loginSuccess, logoutSuccess} from "@/redux/reducers/userSlice";
+import {logoutSuccess} from "@/redux/reducers/userSlice";
 import api from "@/services/api";
+import logo from "@/assets/logo.png";
 
 const components: { title: string; href: string; description: string }[] = [
     {
@@ -93,9 +94,12 @@ const Header = () => {
                           bg-transparent backdrop-blur-md">
             {/* 로고 */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
-                <Link to="/" className="text-lg font-bold whitespace-nowrap font-custom">
-                    <p className="text-right">토축피</p>
-                    <p className="text-right text-xs bg-black text-white pl-5 pr-1">모여라</p>
+                <Link to="/">
+                    <img
+                        src={logo}
+                        alt="메인 이미지"
+                        className="max-w-[100px]"
+                    />
                 </Link>
 
                 {/* 검색창 */}

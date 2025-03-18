@@ -12,7 +12,6 @@ import {Label} from "@/components/ui/label"
 import {useNavigate} from "react-router-dom"
 import api from "@/services/api";
 
-// Zod validation schema
 const FormSchema = z.object({
     name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다."),
     phone: z.string().nonempty("휴대폰 번호는 필수값입니다."),
@@ -98,7 +97,6 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex">
-            {/* 이미지 섹션 */}
             <div className="hidden md:flex w-1/3">
                 <img
                     src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExejJiN3Y0dWU3cDNvaGxrZ2d3a2d6OG1mdDBmcjhwZWR3dHd4eWQ3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/zINs6k7lwfawSbLOIc/giphy.webp"
@@ -107,7 +105,6 @@ export default function SignupPage() {
                 />
             </div>
 
-            {/* 회원가입 섹션 */}
             <div className="w-full md:w-2/3 flex items-center justify-center bg-white">
                 <div className="w-full max-w-md p-8">
                     <div className="flex flex-col justify-start">
