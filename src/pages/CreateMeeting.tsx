@@ -1,26 +1,18 @@
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
-import { DateTimePicker24h } from "@/components/ui/DateTimePicker24h";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import React, {useEffect, useState} from "react";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {z} from "zod";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Textarea} from "@/components/ui/textarea";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {CalendarIcon, Plus} from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
-import { addDays, format } from "date-fns";
+import {addDays, format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {Slider} from "@/components/ui/slider";
 
@@ -52,6 +44,14 @@ const meetingSchema = z.object({
 });
 
 const CreateMeeting = () => {
+    const [map, setMap] = useState<naver.maps.Map | null>(null);
+    const [activeField, setActiveField] = useState<string | null>(null);
+    const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: new Date(),
+        to: addDays(new Date(), 7),
+    });
+
     const form = useForm({
         resolver: zodResolver(meetingSchema),
         defaultValues: {
@@ -66,28 +66,40 @@ const CreateMeeting = () => {
     });
 
     const { watch, setValue } = form;
-    const [activeField, setActiveField] = useState<string | null>(null);
-    const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
-    const [date, setDate] = useState<DateRange | undefined>({
-        from: new Date(),
-        to: addDays(new Date(), 7),
-    });
+
+    useEffect(() => {
+        if (activeField === "location" && typeof window !== "undefined" && window.naver) {
+            const mapContainer = document.getElementById("map");
+
+            if (mapContainer) {
+                const mapInstance = new window.naver.maps.Map("map", {
+                    center: new window.naver.maps.LatLng(37.3595704, 127.105399),
+                    zoom: 16,
+                });
+
+                setMap(mapInstance);
+            }
+        }
+    }, [activeField]);
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
         console.log(values);
     };
 
     return (
-        <div className="flex pt-20 space-y-10 px-20">
+        <div className="flex pt-20 px-20 h-screen">
             <ResizablePanelGroup
                 direction="horizontal"
             >
                 <ResizablePanel
                     defaultSize={40}
                 >
-                    <div className="pr-8 pl-1">
+                    <div className="pr-8 pl-1 h-full overflow-y-scroll flex justify-center items-center scrollbar-hide">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <form
+                                onSubmit={form.handleSubmit(onSubmit)}
+                                className="space-y-5"
+                            >
                                 <FormField
                                     control={form.control}
                                     name="title"
@@ -181,7 +193,7 @@ const CreateMeeting = () => {
                                         <FormItem>
                                             <FormLabel className="font-bold">모임 일자</FormLabel>
                                             <FormControl>
-                                                <div className="grid grid-cols-4 gap-2">
+                                                <div className="grid grid-cols-4 gap-7">
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <Button
@@ -219,7 +231,7 @@ const CreateMeeting = () => {
                                                     <Button
                                                         type="button"
                                                         variant="outline"
-                                                        className="col-span-1"
+                                                        className="col-span-1 border-2"
                                                         onClick={() => setActiveField("schedules")}
                                                     >
                                                         <Plus />
@@ -232,9 +244,11 @@ const CreateMeeting = () => {
                                     )}
                                 />
 
-                                <Button type="submit" className=" w-full">
-                                    모임 만들기
-                                </Button>
+                                <div className="pt-10">
+                                    <Button type="submit" className="w-full">
+                                        모임 만들기
+                                    </Button>
+                                </div>
                             </form>
                         </Form>
                     </div>
@@ -244,7 +258,7 @@ const CreateMeeting = () => {
 
                 <ResizablePanel defaultSize={60}>
                     <div className="h-full flex justify-center items-center">
-                        {activeField === "location" && <div>위치를 입력하세요.</div>}
+                        {activeField === "location" && <div id="map" className="h-full w-full"/>}
                         {activeField === "schedules" && (
                             <div className="w-full">
                                 <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
