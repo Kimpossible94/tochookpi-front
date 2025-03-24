@@ -17,10 +17,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import {CalendarIcon, Plus} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import { addDays, format } from "date-fns";
+import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
+import {Slider} from "@/components/ui/slider";
 
 // 유효성 검사 스키마
 const meetingSchema = z.object({
@@ -76,197 +78,230 @@ const CreateMeeting = () => {
     };
 
     return (
-        <div className="h-screen flex pt-20 space-y-10 px-32">
-            <div className="w-1/2 p-8">
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="title"
-                            render={({ field }) => (
-                                <FormItem onClick={() => setActiveField(null)}>
-                                    <FormLabel>모임명</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="모임 이름 입력" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+        <div className="flex pt-20 space-y-10 px-20">
+            <ResizablePanelGroup
+                direction="horizontal"
+            >
+                <ResizablePanel
+                    defaultSize={40}
+                >
+                    <div className="pr-8 pl-1">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="title"
+                                    render={({ field }) => (
+                                        <FormItem onClick={() => setActiveField(null)}>
+                                            <FormLabel className="font-bold">모임명</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="모임명을 입력해 주세요." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem onClick={() => setActiveField(null)}>
-                                    <FormLabel>설명</FormLabel>
-                                    <FormControl>
-                                        <Textarea placeholder="모임 설명 입력" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name="description"
+                                    render={({ field }) => (
+                                        <FormItem onClick={() => setActiveField(null)}>
+                                            <FormLabel className="font-bold">설명</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="이번 모임은 어떤 모임인지 설명해 주세요. (예: 축구를 사랑하는 모임)" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <FormField
-                            control={form.control}
-                            name="location"
-                            render={({ field }) => (
-                                <FormItem onClick={() => setActiveField("location")}>
-                                    <FormLabel>위치</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="위치 선택" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name="location"
+                                    render={({ field }) => (
+                                        <FormItem onClick={() => setActiveField("location")}>
+                                            <FormLabel className="font-bold">위치</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="어디서 모이는지 알려주세요." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <FormField
-                            control={form.control}
-                            name="image"
-                            render={({ field }) => (
-                                <FormItem onClick={() => setActiveField(null)}>
-                                    <FormLabel>이미지 URL</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="이미지 URL 입력" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name="image"
+                                    render={({ field }) => (
+                                        <FormItem onClick={() => setActiveField(null)}>
+                                            <FormLabel className="font-bold">이미지 URL</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="모임을 대표하는 이미지가 있다면 넣어주세요." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <FormField
-                            control={form.control}
-                            name="maxParticipantsCnt"
-                            render={({ field }) => (
-                                <FormItem onClick={() => setActiveField(null)}>
-                                    <FormLabel>최대 참가자 수</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name="maxParticipantsCnt"
+                                    render={({ field }) => (
+                                        <FormItem onClick={() => setActiveField(null)}>
+                                            <FormLabel className="font-bold">최대 참가자 수</FormLabel>
+                                            <FormControl>
+                                                <div className="grid grid-cols-6 gap-5">
+                                                    <Slider
+                                                        min={1}
+                                                        max={40}
+                                                        step={1}
+                                                        value={[field.value || 0]}
+                                                        onValueChange={(value) => field.onChange(value[0])}
+                                                        className="col-span-5"
+                                                    />
+                                                    <Input
+                                                        type="number"
+                                                        value={field.value || undefined}
+                                                        onChange={(e) =>
+                                                            field.onChange(Math.min(40, Number(e.target.value)))}
+                                                        className="col-span-1"
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <FormField
-                            control={form.control}
-                            name="period"
-                            render={() => (
-                                <FormItem>
-                                    <FormLabel>모임 일정</FormLabel>
-                                    <FormControl>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-[300px] justify-start text-left font-normal"
-                                                >
-                                                    <CalendarIcon />
-                                                    {date?.from ? (
-                                                        date.to ? (
-                                                            `${format(date.from, "LLL dd, y")} - ${format(date.to, "LLL dd, y")}`
-                                                        ) : (
-                                                            format(date.from, "LLL dd, y")
-                                                        )
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    initialFocus
-                                                    mode="range"
-                                                    defaultMonth={date?.from}
-                                                    selected={date}
-                                                    onSelect={(range) => {
-                                                        setDate(range);
-                                                        setValue("period.startDate", range?.from?.toISOString() || "");
-                                                        setValue("period.endDate", range?.to?.toISOString() || "");
-                                                    }}
-                                                    numberOfMonths={2}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                <FormField
+                                    control={form.control}
+                                    name="period"
+                                    render={() => (
+                                        <FormItem>
+                                            <FormLabel className="font-bold">모임 일자</FormLabel>
+                                            <FormControl>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                className="w-full font-normal col-span-3"
+                                                            >
+                                                                <CalendarIcon />
+                                                                {date?.from ? (
+                                                                    date.to ? (
+                                                                        `${format(date.from, "LLL dd, y")} - ${format(date.to, "LLL dd, y")}`
+                                                                    ) : (
+                                                                        format(date.from, "LLL dd, y")
+                                                                    )
+                                                                ) : (
+                                                                    <span>Pick a date</span>
+                                                                )}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                initialFocus
+                                                                mode="range"
+                                                                defaultMonth={date?.from}
+                                                                selected={date}
+                                                                onSelect={(range) => {
+                                                                    setDate(range);
+                                                                    setValue("period.startDate", range?.from?.toISOString() || "");
+                                                                    setValue("period.endDate", range?.to?.toISOString() || "");
+                                                                }}
+                                                                numberOfMonths={2}
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
 
-                        <FormItem onClick={() => setActiveField("schedules")}>
-                            <FormLabel>세부 일정</FormLabel>
-                            <FormControl>
-                                <Button type="button">일정 추가</Button>
-                            </FormControl>
-                        </FormItem>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="col-span-1"
+                                                        onClick={() => setActiveField("schedules")}
+                                                    >
+                                                        <Plus />
+                                                        세부 일정
+                                                    </Button>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <Button type="submit" className="mt-4 w-full">
-                            모임 만들기
-                        </Button>
-                    </form>
-                </Form>
-            </div>
+                                <Button type="submit" className=" w-full">
+                                    모임 만들기
+                                </Button>
+                            </form>
+                        </Form>
+                    </div>
+                </ResizablePanel>
 
-            <Card className="w-1/2 p-8 flex items-center justify-center">
-                {activeField === "location" && <div>위치를 입력하세요.</div>}
-                {activeField === "schedules" && (
-                    <div className="w-full">
-                        <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
-                        <ScrollArea className="h-[300px] border rounded-md p-2">
-                            {schedules.map((schedule, index) => (
-                                <div key={index} className="mb-4 p-2 border rounded-md">
-                                    <p className="font-medium">날짜: {schedule.date}</p>
-                                    {schedule.events.map((event, i) => (
-                                        <div key={i} className="ml-4">
-                                            <p>🕒 {event.startTime} - {event.endTime}</p>
-                                            <p>📌 {event.description}</p>
+                <ResizableHandle withHandle />
+
+                <ResizablePanel defaultSize={60}>
+                    <div className="h-full flex justify-center items-center">
+                        {activeField === "location" && <div>위치를 입력하세요.</div>}
+                        {activeField === "schedules" && (
+                            <div className="w-full">
+                                <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
+                                <ScrollArea className="h-[300px] border rounded-md p-2">
+                                    {schedules.map((schedule, index) => (
+                                        <div key={index} className="mb-4 p-2 border rounded-md">
+                                            <p className="font-medium">날짜: {schedule.date}</p>
+                                            {schedule.events.map((event, i) => (
+                                                <div key={i} className="ml-4">
+                                                    <p>🕒 {event.startTime} - {event.endTime}</p>
+                                                    <p>📌 {event.description}</p>
+                                                </div>
+                                            ))}
                                         </div>
                                     ))}
+                                </ScrollArea>
+
+                                <div className="mt-4 space-y-2">
+                                    <p className="text-gray-600">날짜 선택</p>
+                                    <DateTimePicker24h
+                                        value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}
+                                        onChange={(date) => {
+                                            if (date) {
+                                                setValue("period.startDate", date.toISOString());
+                                            }
+                                        }}
+                                    />
+
+                                    <p className="text-gray-600 mt-4">종료 날짜 선택</p>
+                                    <DateTimePicker24h
+                                        value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}
+                                        onChange={(date) => {
+                                            if (date) {
+                                                setValue("period.endDate", date.toISOString());
+                                            }
+                                        }}
+                                    />
+
+                                    <Button
+                                        className="mt-4"
+                                        onClick={() => {
+                                            const newSchedule = {
+                                                date: watch("period.startDate"),
+                                                events: [],
+                                            };
+                                            setSchedules((prev) => [...prev, newSchedule]);
+                                        }}
+                                    >
+                                        일정 추가
+                                    </Button>
                                 </div>
-                            ))}
-                        </ScrollArea>
-
-                        <div className="mt-4 space-y-2">
-                            <p className="text-gray-600">날짜 선택</p>
-                            <DateTimePicker24h
-                                value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}
-                                onChange={(date) => {
-                                    if (date) {
-                                        setValue("period.startDate", date.toISOString());
-                                    }
-                                }}
-                            />
-
-                            <p className="text-gray-600 mt-4">종료 날짜 선택</p>
-                            <DateTimePicker24h
-                                value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}
-                                onChange={(date) => {
-                                    if (date) {
-                                        setValue("period.endDate", date.toISOString());
-                                    }
-                                }}
-                            />
-
-                            <Button
-                                className="mt-4"
-                                onClick={() => {
-                                    const newSchedule = {
-                                        date: watch("period.startDate"),
-                                        events: [],
-                                    };
-                                    setSchedules((prev) => [...prev, newSchedule]);
-                                }}
-                            >
-                                일정 추가
-                            </Button>
-                        </div>
+                            </div>
+                        )}
+                        {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
                     </div>
-                )}
-                {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
-            </Card>
+                </ResizablePanel>
+            </ResizablePanelGroup>
         </div>
     );
 };
