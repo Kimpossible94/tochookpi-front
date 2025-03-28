@@ -15,6 +15,7 @@ import {DateRange} from "react-day-picker";
 import {addDays, format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {Slider} from "@/components/ui/slider";
+import api from "@/services/api";
 
 // 유효성 검사 스키마
 const meetingSchema = z.object({
@@ -44,13 +45,13 @@ const meetingSchema = z.object({
 });
 
 const CreateMeeting = () => {
-    const [map, setMap] = useState<naver.maps.Map | null>(null);
     const [activeField, setActiveField] = useState<string | null>(null);
     const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(),
         to: addDays(new Date(), 7),
     });
+    const [map, setMap] = useState<naver.maps.Map | undefined>(undefined);
 
     const form = useForm({
         resolver: zodResolver(meetingSchema),
@@ -65,6 +66,7 @@ const CreateMeeting = () => {
         },
     });
 
+    const mapMarkerList: naver.maps.Marker[] = [];
     const { watch, setValue } = form;
 
     useEffect(() => {
@@ -72,15 +74,51 @@ const CreateMeeting = () => {
             const mapContainer = document.getElementById("map");
 
             if (mapContainer) {
-                const mapInstance = new window.naver.maps.Map("map", {
-                    center: new window.naver.maps.LatLng(37.3595704, 127.105399),
-                    zoom: 16,
-                });
+                setMap(new naver.maps.Map('map', {
+                    center: new naver.maps.LatLng(37.3595704, 127.105399), //지도의 초기 중심 좌표
+                    zoom: 13, //지도의 초기 줌 레벨
+                    minZoom: 7, //지도의 최소 줌 레벨
+                    zoomControl: true, //줌 컨트롤의 표시 여부
+                    zoomControlOptions: { //줌 컨트롤의 옵션
+                        position: naver.maps.Position.TOP_RIGHT
+                    },
+                }))
 
-                setMap(mapInstance);
+                new naver.maps.Marker({
+                    position: new naver.maps.LatLng(37.3595704, 127.105399),
+                    map: map
+                })
             }
         }
     }, [activeField]);
+
+    const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const target = event.target as HTMLInputElement;
+
+            naver.maps.Service.geocode({ query: target.value }, function (status, response) {
+                if (status !== naver.maps.Service.Status.OK) {
+                    return;
+                }
+
+                console.log(response.v2.addresses);
+
+                if(response.v2.addresses.length <= 0) {
+                    api.get(`/naver/search/local?query=${target.value}`).then(response => {
+                        console.log(response.data);
+                        if(response.data.length <= 0) {
+
+                        }
+                    });
+                }
+            });
+        }
+    };
+
+    const addMapMarker = () => {
+
+    }
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
         console.log(values);
@@ -135,7 +173,11 @@ const CreateMeeting = () => {
                                         <FormItem onClick={() => setActiveField("location")}>
                                             <FormLabel className="font-bold">위치</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="어디서 모이는지 알려주세요." {...field} />
+                                                <Input
+                                                    placeholder="어디서 모이는지 알려주세요."
+                                                    {...field}
+                                                    onKeyDown={handleLocationSearch}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
