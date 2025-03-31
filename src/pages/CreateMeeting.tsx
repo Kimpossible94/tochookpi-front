@@ -74,7 +74,7 @@ const CreateMeeting = () => {
             const mapContainer = document.getElementById("map");
 
             if (mapContainer) {
-                setMap(new naver.maps.Map('map', {
+                const mapOptions: naver.maps.MapOptions = {
                     center: new naver.maps.LatLng(37.3595704, 127.105399), //지도의 초기 중심 좌표
                     zoom: 13, //지도의 초기 줌 레벨
                     minZoom: 7, //지도의 최소 줌 레벨
@@ -82,7 +82,10 @@ const CreateMeeting = () => {
                     zoomControlOptions: { //줌 컨트롤의 옵션
                         position: naver.maps.Position.TOP_RIGHT
                     },
-                }))
+                }
+
+                const map = new naver.maps.Map(mapContainer, mapOptions);
+                setMap(map);
 
                 new naver.maps.Marker({
                     position: new naver.maps.LatLng(37.3595704, 127.105399),
@@ -106,9 +109,12 @@ const CreateMeeting = () => {
 
                 if(response.v2.addresses.length <= 0) {
                     api.get(`/naver/search/local?query=${target.value}`).then(response => {
-                        console.log(response.data);
-                        if(response.data.length <= 0) {
+                        if(response.data.length <= 0) alert("검색결과가 없습니다.");
 
+                        for (const data of response.data) {
+                            const lng = data.mapx / 1e7; // 경도 (x 값)
+                            const lat = data.mapy / 1e7;  // 위도 (y 값)
+                            addMapMarker(data.title, lng, lat);
                         }
                     });
                 }
@@ -116,8 +122,18 @@ const CreateMeeting = () => {
         }
     };
 
-    const addMapMarker = () => {
+    const addMapMarker = (title: string, lng: number, lat: number) => {
+        let newMarker = new naver.maps.Marker({
+            position: new naver.maps.LatLng(lat, lng),
+            map: map,
+            title: title,
+            clickable: true,
+        })
+        mapMarkerList.push(newMarker);
 
+        naver.maps.Event.addListener(newMarker, 'click', () => {
+            console.log('click event');
+        })
     }
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
