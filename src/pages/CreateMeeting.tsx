@@ -110,11 +110,11 @@ const CreateMeeting = () => {
                 if(response.v2.addresses.length <= 0) {
                     api.get(`/naver/search/local?query=${target.value}`).then(response => {
                         if(response.data.length <= 0) alert("검색결과가 없습니다.");
-
+                        console.log(response.data);
                         for (const data of response.data) {
                             const lng = data.mapx / 1e7; // 경도 (x 값)
                             const lat = data.mapy / 1e7;  // 위도 (y 값)
-                            addMapMarker(data.title, lng, lat);
+                            addMapMarker(data.title, lng, lat, data.roadAddress);
                         }
                     });
                 }
@@ -122,7 +122,12 @@ const CreateMeeting = () => {
         }
     };
 
-    const addMapMarker = (title: string, lng: number, lat: number) => {
+    const addMapMarker = (title: string, lng: number, lat: number, address: string) => {
+        if (!map) {
+            alert("마커 표시중 에러 발생");
+            return;
+        }
+        
         let newMarker = new naver.maps.Marker({
             position: new naver.maps.LatLng(lat, lng),
             map: map,
@@ -131,9 +136,24 @@ const CreateMeeting = () => {
         })
         mapMarkerList.push(newMarker);
 
+        const infowindow = new naver.maps.InfoWindow({
+            content: `<div class="bg-white p-3 rounded-lg shadow-lg font-sans max-w-3xs text-center">
+                        <h3 class="my-1 text-base font-bold">${title}</h3>
+                        <p class="m-0 text-gray-700" style="font-size: 14px">${address}</p>
+                      </div>`,
+        });
+
         naver.maps.Event.addListener(newMarker, 'click', () => {
-            console.log('click event');
-        })
+            if (infowindow.getMap()) {
+                infowindow.close();
+            } else {
+                infowindow.open(map, newMarker);
+            }
+        });
+
+        naver.maps.Event.addListener(map, "click", () => {
+            infowindow.close();
+        });
     }
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
