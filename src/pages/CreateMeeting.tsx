@@ -52,6 +52,8 @@ const CreateMeeting = () => {
         to: addDays(new Date(), 7),
     });
     const [map, setMap] = useState<naver.maps.Map | undefined>(undefined);
+    const [mapMarkerList, setMapMarkerList] = useState<naver.maps.Marker[]>([]);
+    const [infoWindowList, setInfoWindowList] = useState<naver.maps.InfoWindow[]>([]);
 
     const form = useForm({
         resolver: zodResolver(meetingSchema),
@@ -66,7 +68,6 @@ const CreateMeeting = () => {
         },
     });
 
-    const mapMarkerList: naver.maps.Marker[] = [];
     const { watch, setValue } = form;
 
     useEffect(() => {
@@ -87,73 +88,94 @@ const CreateMeeting = () => {
                 const map = new naver.maps.Map(mapContainer, mapOptions);
                 setMap(map);
 
-                new naver.maps.Marker({
-                    position: new naver.maps.LatLng(37.3595704, 127.105399),
-                    map: map
-                })
+                naver.maps.Event.addListener(map, "click", () => {
+                    // TODO: 열려있는 InfoWindow 모두 닫기
+                });
             }
         }
     }, [activeField]);
 
+    useEffect(() => {
+        if (!map) {
+            alert("검색 중 에러 발생 !");
+            return;
+        }
+        removeAllinfoWindow();
+
+        mapMarkerList.forEach(marker => {
+
+        })
+
+        // naver.maps.Event.addListener(newMarker, 'click', () => {
+        //     if (infowindow.getMap()) {
+        //         infowindow.close();
+        //     } else {
+        //         infowindow.open(map!, newMarker);
+        //     }
+        // });
+    }, [mapMarkerList]);
+
     const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
             event.preventDefault();
+            if (!map) {
+                alert("검색 중 에러 발생 !");
+                return;
+            }
+
             const target = event.target as HTMLInputElement;
 
             naver.maps.Service.geocode({ query: target.value }, function (status, response) {
-                if (status !== naver.maps.Service.Status.OK) {
-                    return;
-                }
-
-                console.log(response.v2.addresses);
+                if (status !== naver.maps.Service.Status.OK) return;
+                const newMarkers: naver.maps.Marker[] = [];
 
                 if(response.v2.addresses.length <= 0) {
                     api.get(`/naver/search/local?query=${target.value}`).then(response => {
-                        if(response.data.length <= 0) alert("검색결과가 없습니다.");
-                        console.log(response.data);
+                        if(response.data.length <= 0) {
+                            alert("검색결과가 없습니다.");
+                            return;
+                        }
+
                         for (const data of response.data) {
                             const lng = data.mapx / 1e7; // 경도 (x 값)
                             const lat = data.mapy / 1e7;  // 위도 (y 값)
-                            addMapMarker(data.title, lng, lat, data.roadAddress);
+                            map.setCenter(new naver.maps.LatLng(lat, lng));
+                            const marker = addMapMarker(data.title, lng, lat, data.roadAddress);
+                            if (marker) newMarkers.push(marker);
                         }
                     });
+                } else {
+                    const addressItem = response.v2.addresses[0];
+                    const lng = Number(addressItem.x);
+                    const lat = Number(addressItem.y);
+
+                    map.setCenter(new naver.maps.LatLng(Number(addressItem.y), Number(addressItem.x)));
+                    const marker = addMapMarker('', lng, lat, addressItem.roadAddress || addressItem.jibunAddress);
+                    if (marker) newMarkers.push(marker);
                 }
+
+                setMapMarkerList(newMarkers);
             });
         }
     };
 
+    const removeAllMapMarker = () => {
+        mapMarkerList.forEach(marker => marker.setMap(null));
+    }
+
+    const removeAllinfoWindow = () => {
+        infoWindowList.forEach(window => window.setMap(null));
+    }
+
     const addMapMarker = (title: string, lng: number, lat: number, address: string) => {
-        if (!map) {
-            alert("마커 표시중 에러 발생");
-            return;
-        }
-        
         let newMarker = new naver.maps.Marker({
             position: new naver.maps.LatLng(lat, lng),
             map: map,
             title: title,
             clickable: true,
         })
-        mapMarkerList.push(newMarker);
 
-        const infowindow = new naver.maps.InfoWindow({
-            content: `<div class="bg-white p-3 rounded-lg shadow-lg font-sans max-w-3xs text-center">
-                        <h3 class="my-1 text-base font-bold">${title}</h3>
-                        <p class="m-0 text-gray-700" style="font-size: 14px">${address}</p>
-                      </div>`,
-        });
-
-        naver.maps.Event.addListener(newMarker, 'click', () => {
-            if (infowindow.getMap()) {
-                infowindow.close();
-            } else {
-                infowindow.open(map, newMarker);
-            }
-        });
-
-        naver.maps.Event.addListener(map, "click", () => {
-            infowindow.close();
-        });
+        return newMarker;
     }
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
