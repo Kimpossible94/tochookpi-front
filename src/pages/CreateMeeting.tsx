@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {z} from "zod";
@@ -21,7 +21,12 @@ import api from "@/services/api";
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
     description: z.string().optional(),
-    location: z.string().optional(),
+    location: z.object({
+        title: z.string().min(1, "위치 이름을 입력하세요."),
+        address: z.string().min(1, "주소를 입력하세요."),
+        lng: z.number(),
+        lat: z.number(),
+    }).optional(),
     image: z.string().optional(),
     period: z.object({
         startDate: z.string().min(1, "시작 날짜를 입력하세요."),
@@ -52,15 +57,20 @@ const CreateMeeting = () => {
         to: addDays(new Date(), 7),
     });
     const [map, setMap] = useState<naver.maps.Map | undefined>(undefined);
-    const [mapMarkerList, setMapMarkerList] = useState<naver.maps.Marker[]>([]);
-    const [infoWindowList, setInfoWindowList] = useState<naver.maps.InfoWindow[]>([]);
+    const mapMarkerList = useRef<naver.maps.Marker[]>([]);
+    const infoWindowList = useRef<naver.maps.InfoWindow[]>([]);
 
     const form = useForm({
         resolver: zodResolver(meetingSchema),
         defaultValues: {
             title: "",
             description: "",
-            location: "",
+            location: {
+                title: "",
+                address: "",
+                lng: 0,
+                lat: 0,
+            },
             image: "",
             maxParticipantsCnt: 5,
             period: { startDate: "", endDate: "" },
@@ -77,7 +87,7 @@ const CreateMeeting = () => {
             if (mapContainer) {
                 const mapOptions: naver.maps.MapOptions = {
                     center: new naver.maps.LatLng(37.3595704, 127.105399), //지도의 초기 중심 좌표
-                    zoom: 13, //지도의 초기 줌 레벨
+                    zoom: 15, //지도의 초기 줌 레벨
                     minZoom: 7, //지도의 최소 줌 레벨
                     zoomControl: true, //줌 컨트롤의 표시 여부
                     zoomControlOptions: { //줌 컨트롤의 옵션
@@ -89,31 +99,13 @@ const CreateMeeting = () => {
                 setMap(map);
 
                 naver.maps.Event.addListener(map, "click", () => {
-                    // TODO: 열려있는 InfoWindow 모두 닫기
+                    infoWindowList.current.forEach(infoWindow => {
+                        infoWindow.close();
+                    })
                 });
             }
         }
     }, [activeField]);
-
-    useEffect(() => {
-        if (!map) {
-            alert("검색 중 에러 발생 !");
-            return;
-        }
-        removeAllinfoWindow();
-
-        mapMarkerList.forEach(marker => {
-
-        })
-
-        // naver.maps.Event.addListener(newMarker, 'click', () => {
-        //     if (infowindow.getMap()) {
-        //         infowindow.close();
-        //     } else {
-        //         infowindow.open(map!, newMarker);
-        //     }
-        // });
-    }, [mapMarkerList]);
 
     const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
@@ -127,7 +119,8 @@ const CreateMeeting = () => {
 
             naver.maps.Service.geocode({ query: target.value }, function (status, response) {
                 if (status !== naver.maps.Service.Status.OK) return;
-                const newMarkers: naver.maps.Marker[] = [];
+                removeAllMapMarker();
+                removeAllinfoWindow();
 
                 if(response.v2.addresses.length <= 0) {
                     api.get(`/naver/search/local?query=${target.value}`).then(response => {
@@ -136,35 +129,44 @@ const CreateMeeting = () => {
                             return;
                         }
 
-                        for (const data of response.data) {
+                        for (let i = 0; i < response.data.length; i++) {
+                            const data = response.data[i];
                             const lng = data.mapx / 1e7; // 경도 (x 값)
                             const lat = data.mapy / 1e7;  // 위도 (y 값)
-                            map.setCenter(new naver.maps.LatLng(lat, lng));
-                            const marker = addMapMarker(data.title, lng, lat, data.roadAddress);
-                            if (marker) newMarkers.push(marker);
+                            addMapMarker(data.title, lng, lat, data.roadAddress);
+                            if (i == 0) map.setCenter(new naver.maps.LatLng(lat, lng));
                         }
                     });
                 } else {
                     const addressItem = response.v2.addresses[0];
                     const lng = Number(addressItem.x);
                     const lat = Number(addressItem.y);
+                    let title = '';
 
+                    for (const e of response.v2.addresses[0].addressElements) {
+                        if(e.types[0] === 'BUILDING_NAME') {
+                            title = e.shortName;
+                            break;
+                        }
+                    }
+
+                    addMapMarker(title, lng, lat, addressItem.roadAddress || addressItem.jibunAddress);
                     map.setCenter(new naver.maps.LatLng(Number(addressItem.y), Number(addressItem.x)));
-                    const marker = addMapMarker('', lng, lat, addressItem.roadAddress || addressItem.jibunAddress);
-                    if (marker) newMarkers.push(marker);
                 }
-
-                setMapMarkerList(newMarkers);
             });
         }
     };
 
     const removeAllMapMarker = () => {
-        mapMarkerList.forEach(marker => marker.setMap(null));
+        // 메모리 해제를 위해서 null 처리
+        mapMarkerList.current.forEach(marker => marker.setMap(null));
+        mapMarkerList.current = [];
     }
 
     const removeAllinfoWindow = () => {
-        infoWindowList.forEach(window => window.setMap(null));
+        // 메모리 해제를 위해서 null 처리
+        infoWindowList.current.forEach(window => window.setMap(null));
+        infoWindowList.current = [];
     }
 
     const addMapMarker = (title: string, lng: number, lat: number, address: string) => {
@@ -175,7 +177,35 @@ const CreateMeeting = () => {
             clickable: true,
         })
 
-        return newMarker;
+        const infowindow = new naver.maps.InfoWindow({
+            content: `<div class="bg-white p-3 rounded-lg shadow-lg font-sans max-w-3xs text-center">
+                        <h3 class="my-1 text-base font-bold">${title}</h3>
+                        <p class="m-0 text-gray-700" style="font-size: 14px">${address}</p>
+                        <button id="setLocationBtn_${lat}_${lng}" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded">
+                            위치 설정
+                        </button>
+                      </div>`
+        });
+
+        naver.maps.Event.addListener(newMarker, 'click', () => {
+            if (infowindow.getMap()) {
+                infowindow.close();
+            } else {
+                infowindow.open(map!, newMarker);
+
+                setTimeout(() => {
+                    const btn = document.getElementById(`setLocationBtn_${lat}_${lng}`);
+                    if (btn) {
+                        btn.addEventListener('click', () => {
+                            setValue("location", { title, address, lng, lat });
+                        });
+                    }
+                }, 0);
+            }
+        });
+
+        mapMarkerList.current.push(newMarker);
+        infoWindowList.current.push(infowindow);
     }
 
     const onSubmit = (values: z.infer<typeof meetingSchema>) => {
@@ -232,10 +262,11 @@ const CreateMeeting = () => {
                                             <FormLabel className="font-bold">위치</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="어디서 모이는지 알려주세요."
-                                                    {...field}
+                                                    placeholder="어디서 모이는지 검색해주세요."
                                                     onKeyDown={handleLocationSearch}
+                                                    value={field.value?.address || ""}
                                                 />
+                                            {/*    TODO : 검색창에 입력 안되는 부분 해결 해야함. */}
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
