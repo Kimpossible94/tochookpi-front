@@ -9,7 +9,7 @@ import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, Plus} from "lucide-react";
+import {CalendarIcon} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, format} from "date-fns";
@@ -17,15 +17,14 @@ import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components
 import {Slider} from "@/components/ui/slider";
 import api from "@/services/api";
 
-// 유효성 검사 스키마
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
     description: z.string().optional(),
     location: z.object({
-        title: z.string().min(1, "위치 이름을 입력하세요."),
-        address: z.string().min(1, "주소를 입력하세요."),
-        lng: z.number(),
-        lat: z.number(),
+        title: z.string().optional(),
+        address: z.string().optional(),
+        lng: z.number().optional(),
+        lat: z.number().optional(),
     }).optional(),
     image: z.string().optional(),
     period: z.object({
@@ -60,7 +59,7 @@ const CreateMeeting = () => {
     const mapMarkerList = useRef<naver.maps.Marker[]>([]);
     const infoWindowList = useRef<naver.maps.InfoWindow[]>([]);
 
-    const form = useForm({
+    const form = useForm<z.infer<typeof meetingSchema>>({
         resolver: zodResolver(meetingSchema),
         defaultValues: {
             title: "",
@@ -73,15 +72,15 @@ const CreateMeeting = () => {
             },
             image: "",
             maxParticipantsCnt: 5,
-            period: { startDate: "", endDate: "" },
+            period: { startDate: date?.from?.toISOString(), endDate: date?.to?.toISOString() },
             schedules: [],
         },
     });
 
-    const { watch, setValue } = form;
+    const { setValue } = form;
 
     useEffect(() => {
-        if (activeField === "location" && typeof window !== "undefined" && window.naver) {
+        if (activeField === "location" && typeof window !== "undefined" && window.naver && !map) {
             const mapContainer = document.getElementById("map");
 
             if (mapContainer) {
@@ -105,7 +104,7 @@ const CreateMeeting = () => {
                 });
             }
         }
-    }, [activeField]);
+    }, [activeField, map]);
 
     const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
@@ -134,7 +133,7 @@ const CreateMeeting = () => {
                             const lng = data.mapx / 1e7; // 경도 (x 값)
                             const lat = data.mapy / 1e7;  // 위도 (y 값)
                             addMapMarker(data.title, lng, lat, data.roadAddress);
-                            if (i == 0) map.setCenter(new naver.maps.LatLng(lat, lng));
+                            if (i === 0) map.setCenter(new naver.maps.LatLng(lat, lng));
                         }
                     });
                 } else {
@@ -265,8 +264,14 @@ const CreateMeeting = () => {
                                                     placeholder="어디서 모이는지 검색해주세요."
                                                     onKeyDown={handleLocationSearch}
                                                     value={field.value?.address || ""}
+                                                    onChange={(e) => {
+                                                        // field.value는 객체니까 address만 바꿔줘야 함
+                                                        field.onChange({
+                                                            ...field.value,
+                                                            address: e.target.value,
+                                                        });
+                                                    }}
                                                 />
-                                            {/*    TODO : 검색창에 입력 안되는 부분 해결 해야함. */}
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -365,12 +370,15 @@ const CreateMeeting = () => {
                                                         className="col-span-1 border-2"
                                                         onClick={() => setActiveField("schedules")}
                                                     >
-                                                        <Plus />
-                                                        세부 일정
+                                                        세부 일정 설정
                                                     </Button>
                                                 </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            {form.formState.errors.period?.startDate && (
+                                                <p className="text-red-500 text-sm mt-1">
+                                                    {form.formState.errors.period.startDate.message}
+                                                </p>
+                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -389,60 +397,64 @@ const CreateMeeting = () => {
 
                 <ResizablePanel defaultSize={60}>
                     <div className="h-full flex justify-center items-center">
-                        {activeField === "location" && <div id="map" className="h-full w-full"/>}
-                        {activeField === "schedules" && (
-                            <div className="w-full">
-                                <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
-                                <ScrollArea className="h-[300px] border rounded-md p-2">
-                                    {schedules.map((schedule, index) => (
-                                        <div key={index} className="mb-4 p-2 border rounded-md">
-                                            <p className="font-medium">날짜: {schedule.date}</p>
-                                            {schedule.events.map((event, i) => (
-                                                <div key={i} className="ml-4">
-                                                    <p>🕒 {event.startTime} - {event.endTime}</p>
-                                                    <p>📌 {event.description}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </ScrollArea>
+                        <div
+                            id="map"
+                            className="h-full w-full"
+                            style={{ display: activeField === "location" ? "block" : "none" }}
+                        />
+                        {/*{activeField === "schedules" && (*/}
+                        {/*    <div className="w-full">*/}
+                        {/*        <h2 className="text-xl font-semibold mb-2">일정 입력</h2>*/}
+                        {/*        <ScrollArea className="h-[300px] border rounded-md p-2">*/}
+                        {/*            {schedules.map((schedule, index) => (*/}
+                        {/*                <div key={index} className="mb-4 p-2 border rounded-md">*/}
+                        {/*                    <p className="font-medium">날짜: {schedule.date}</p>*/}
+                        {/*                    {schedule.events.map((event, i) => (*/}
+                        {/*                        <div key={i} className="ml-4">*/}
+                        {/*                            <p>🕒 {event.startTime} - {event.endTime}</p>*/}
+                        {/*                            <p>📌 {event.description}</p>*/}
+                        {/*                        </div>*/}
+                        {/*                    ))}*/}
+                        {/*                </div>*/}
+                        {/*            ))}*/}
+                        {/*        </ScrollArea>*/}
 
-                                <div className="mt-4 space-y-2">
-                                    <p className="text-gray-600">날짜 선택</p>
-                                    <DateTimePicker24h
-                                        value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}
-                                        onChange={(date) => {
-                                            if (date) {
-                                                setValue("period.startDate", date.toISOString());
-                                            }
-                                        }}
-                                    />
+                        {/*        <div className="mt-4 space-y-2">*/}
+                        {/*            <p className="text-gray-600">날짜 선택</p>*/}
+                        {/*            <DateTimePicker24h*/}
+                        {/*                value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}*/}
+                        {/*                onChange={(date) => {*/}
+                        {/*                    if (date) {*/}
+                        {/*                        setValue("period.startDate", date.toISOString());*/}
+                        {/*                    }*/}
+                        {/*                }}*/}
+                        {/*            />*/}
 
-                                    <p className="text-gray-600 mt-4">종료 날짜 선택</p>
-                                    <DateTimePicker24h
-                                        value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}
-                                        onChange={(date) => {
-                                            if (date) {
-                                                setValue("period.endDate", date.toISOString());
-                                            }
-                                        }}
-                                    />
+                        {/*            <p className="text-gray-600 mt-4">종료 날짜 선택</p>*/}
+                        {/*            <DateTimePicker24h*/}
+                        {/*                value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}*/}
+                        {/*                onChange={(date) => {*/}
+                        {/*                    if (date) {*/}
+                        {/*                        setValue("period.endDate", date.toISOString());*/}
+                        {/*                    }*/}
+                        {/*                }}*/}
+                        {/*            />*/}
 
-                                    <Button
-                                        className="mt-4"
-                                        onClick={() => {
-                                            const newSchedule = {
-                                                date: watch("period.startDate"),
-                                                events: [],
-                                            };
-                                            setSchedules((prev) => [...prev, newSchedule]);
-                                        }}
-                                    >
-                                        일정 추가
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                        {/*            <Button*/}
+                        {/*                className="mt-4"*/}
+                        {/*                onClick={() => {*/}
+                        {/*                    const newSchedule = {*/}
+                        {/*                        date: watch("period.startDate"),*/}
+                        {/*                        events: [],*/}
+                        {/*                    };*/}
+                        {/*                    setSchedules((prev) => [...prev, newSchedule]);*/}
+                        {/*                }}*/}
+                        {/*            >*/}
+                        {/*                일정 추가*/}
+                        {/*            </Button>*/}
+                        {/*        </div>*/}
+                        {/*    </div>*/}
+                        {/*)}*/}
                         {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
                     </div>
                 </ResizablePanel>
