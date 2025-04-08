@@ -6,6 +6,11 @@ import AppRoutes from "@/routes/AppRoutes";
 import {Provider} from "react-redux";
 import store, { persistor } from "@/redux/store";
 import { PersistGate } from 'redux-persist/integration/react';
+import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation'
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
+import {registerPlugin} from "react-filepond";
+
+registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview)
 
 function App() {
     return (

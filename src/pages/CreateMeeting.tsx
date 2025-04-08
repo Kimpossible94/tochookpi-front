@@ -16,6 +16,9 @@ import {addDays, format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {Slider} from "@/components/ui/slider";
 import api from "@/services/api";
+import { FilePond } from 'react-filepond'
+import 'filepond/dist/filepond.min.css'
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
@@ -26,7 +29,7 @@ const meetingSchema = z.object({
         lng: z.number().optional(),
         lat: z.number().optional(),
     }).optional(),
-    image: z.string().optional(),
+    image: z.instanceof(File).optional(),
     period: z.object({
         startDate: z.string().min(1, "시작 날짜를 입력하세요."),
         endDate: z.string().min(1, "종료 날짜를 입력하세요."),
@@ -70,14 +73,14 @@ const CreateMeeting = () => {
                 lng: 0,
                 lat: 0,
             },
-            image: "",
+            image: undefined,
             maxParticipantsCnt: 5,
             period: { startDate: date?.from?.toISOString(), endDate: date?.to?.toISOString() },
             schedules: [],
         },
     });
 
-    const { setValue } = form;
+    const { setValue, getValues } = form;
 
     useEffect(() => {
         if (activeField === "location" && typeof window !== "undefined" && window.naver && !map) {
@@ -223,7 +226,7 @@ const CreateMeeting = () => {
                         <Form {...form}>
                             <form
                                 onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-5"
+                                className="space-y-5 w-full"
                             >
                                 <FormField
                                     control={form.control}
@@ -265,7 +268,6 @@ const CreateMeeting = () => {
                                                     onKeyDown={handleLocationSearch}
                                                     value={field.value?.address || ""}
                                                     onChange={(e) => {
-                                                        // field.value는 객체니까 address만 바꿔줘야 함
                                                         field.onChange({
                                                             ...field.value,
                                                             address: e.target.value,
@@ -282,10 +284,23 @@ const CreateMeeting = () => {
                                     control={form.control}
                                     name="image"
                                     render={({ field }) => (
-                                        <FormItem onClick={() => setActiveField(null)}>
-                                            <FormLabel className="font-bold">이미지 URL</FormLabel>
+                                        <FormItem onClick={() => setActiveField(null)} className="w-full">
+                                            <FormLabel className="font-bold">대표 이미지</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="모임을 대표하는 이미지가 있다면 넣어주세요." {...field} />
+                                                <FilePond
+                                                    allowMultiple={false}
+                                                    acceptedFileTypes={['image/*']}
+                                                    name="image"
+                                                    files={field.value ? [field.value] : []}
+                                                    onupdatefiles={(fileItems) => {
+                                                        console.log('image');
+                                                        const file = fileItems[0]?.file ?? null;
+                                                        field.onChange(file); // React Hook Form에 파일 넣기
+                                                        console.log(getValues('image'));
+
+                                                    }}
+                                                    labelIdle='드래그해서 올리거나 <span class="filepond--label-action w-full">클릭해서 업로드</span>'
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -402,59 +417,59 @@ const CreateMeeting = () => {
                             className="h-full w-full"
                             style={{ display: activeField === "location" ? "block" : "none" }}
                         />
-                        {/*{activeField === "schedules" && (*/}
-                        {/*    <div className="w-full">*/}
-                        {/*        <h2 className="text-xl font-semibold mb-2">일정 입력</h2>*/}
-                        {/*        <ScrollArea className="h-[300px] border rounded-md p-2">*/}
-                        {/*            {schedules.map((schedule, index) => (*/}
-                        {/*                <div key={index} className="mb-4 p-2 border rounded-md">*/}
-                        {/*                    <p className="font-medium">날짜: {schedule.date}</p>*/}
-                        {/*                    {schedule.events.map((event, i) => (*/}
-                        {/*                        <div key={i} className="ml-4">*/}
-                        {/*                            <p>🕒 {event.startTime} - {event.endTime}</p>*/}
-                        {/*                            <p>📌 {event.description}</p>*/}
-                        {/*                        </div>*/}
-                        {/*                    ))}*/}
-                        {/*                </div>*/}
-                        {/*            ))}*/}
-                        {/*        </ScrollArea>*/}
+                        {activeField === "schedules" && (
+                            <div className="w-full">
+                                <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
+                                <ScrollArea className="h-[300px] border rounded-md p-2">
+                                    {schedules.map((schedule, index) => (
+                                        <div key={index} className="mb-4 p-2 border rounded-md">
+                                            <p className="font-medium">날짜: {schedule.date}</p>
+                                            {schedule.events.map((event, i) => (
+                                                <div key={i} className="ml-4">
+                                                    <p>🕒 {event.startTime} - {event.endTime}</p>
+                                                    <p>📌 {event.description}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </ScrollArea>
 
-                        {/*        <div className="mt-4 space-y-2">*/}
-                        {/*            <p className="text-gray-600">날짜 선택</p>*/}
-                        {/*            <DateTimePicker24h*/}
-                        {/*                value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}*/}
-                        {/*                onChange={(date) => {*/}
-                        {/*                    if (date) {*/}
-                        {/*                        setValue("period.startDate", date.toISOString());*/}
-                        {/*                    }*/}
-                        {/*                }}*/}
-                        {/*            />*/}
+                                <div className="mt-4 space-y-2">
+                                    {/*<p className="text-gray-600">날짜 선택</p>*/}
+                                    {/*<DateTimePicker24h*/}
+                                    {/*    value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}*/}
+                                    {/*    onChange={(date) => {*/}
+                                    {/*        if (date) {*/}
+                                    {/*            setValue("period.startDate", date.toISOString());*/}
+                                    {/*        }*/}
+                                    {/*    }}*/}
+                                    {/*/>*/}
 
-                        {/*            <p className="text-gray-600 mt-4">종료 날짜 선택</p>*/}
-                        {/*            <DateTimePicker24h*/}
-                        {/*                value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}*/}
-                        {/*                onChange={(date) => {*/}
-                        {/*                    if (date) {*/}
-                        {/*                        setValue("period.endDate", date.toISOString());*/}
-                        {/*                    }*/}
-                        {/*                }}*/}
-                        {/*            />*/}
+                                    {/*<p className="text-gray-600 mt-4">종료 날짜 선택</p>*/}
+                                    {/*<DateTimePicker24h*/}
+                                    {/*    value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}*/}
+                                    {/*    onChange={(date) => {*/}
+                                    {/*        if (date) {*/}
+                                    {/*            setValue("period.endDate", date.toISOString());*/}
+                                    {/*        }*/}
+                                    {/*    }}*/}
+                                    {/*/>*/}
 
-                        {/*            <Button*/}
-                        {/*                className="mt-4"*/}
-                        {/*                onClick={() => {*/}
-                        {/*                    const newSchedule = {*/}
-                        {/*                        date: watch("period.startDate"),*/}
-                        {/*                        events: [],*/}
-                        {/*                    };*/}
-                        {/*                    setSchedules((prev) => [...prev, newSchedule]);*/}
-                        {/*                }}*/}
-                        {/*            >*/}
-                        {/*                일정 추가*/}
-                        {/*            </Button>*/}
-                        {/*        </div>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                                    {/*<Button*/}
+                                    {/*    className="mt-4"*/}
+                                    {/*    onClick={() => {*/}
+                                    {/*        const newSchedule = {*/}
+                                    {/*            date: watch("period.startDate"),*/}
+                                    {/*            events: [],*/}
+                                    {/*        };*/}
+                                    {/*        setSchedules((prev) => [...prev, newSchedule]);*/}
+                                    {/*    }}*/}
+                                    {/*>*/}
+                                    {/*    일정 추가*/}
+                                    {/*</Button>*/}
+                                </div>
+                            </div>
+                        )}
                         {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
                     </div>
                 </ResizablePanel>
