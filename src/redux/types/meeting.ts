@@ -19,7 +19,12 @@ export interface Meeting {
     id: number;
     title: string;
     description: string;
-    location?: string;
+    location?: {
+        title: string,
+        address: string,
+        lng: number,
+        lat: number,
+    };
     image?: string;
     currentParticipantsCnt: number;
     maxParticipantsCnt: number;
@@ -29,10 +34,3 @@ export interface Meeting {
     status: MeetingStatus;
     review?: MeetingReview[];
 }
-
-
-export interface MeetingSection {
-    subject: string;
-    subjectName: string;
-    children: Meeting[];
-};

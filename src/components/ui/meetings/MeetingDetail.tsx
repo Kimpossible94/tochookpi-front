@@ -23,7 +23,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                         id: 2,
                         title: '축구 모임',
                         description: '주말마다 축구할 사람 모집합니다!',
-                        location: '서울 마포구',
+                        location: undefined,
                         image: '',
                         currentParticipantsCnt: 8,
                         maxParticipantsCnt: 20,

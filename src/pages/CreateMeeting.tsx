@@ -5,20 +5,20 @@ import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
-import {ScrollArea} from "@/components/ui/scroll-area";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon} from "lucide-react";
+import {CalendarIcon, Plus} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
-import {addDays, format} from "date-fns";
+import {addDays, eachDayOfInterval, format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {Slider} from "@/components/ui/slider";
 import api from "@/services/api";
-import { FilePond } from 'react-filepond'
+import {FilePond} from 'react-filepond'
 import 'filepond/dist/filepond.min.css'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
+import {ScrollArea} from "@/components/ui/scroll-area";
 
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
@@ -67,12 +67,7 @@ const CreateMeeting = () => {
         defaultValues: {
             title: "",
             description: "",
-            location: {
-                title: "",
-                address: "",
-                lng: 0,
-                lat: 0,
-            },
+            location: undefined,
             image: undefined,
             maxParticipantsCnt: 5,
             period: { startDate: date?.from?.toISOString(), endDate: date?.to?.toISOString() },
@@ -215,18 +210,14 @@ const CreateMeeting = () => {
     };
 
     return (
-        <div className="flex pt-20 px-20 h-screen">
-            <ResizablePanelGroup
-                direction="horizontal"
-            >
-                <ResizablePanel
-                    defaultSize={40}
-                >
-                    <div className="pr-8 pl-1 h-full overflow-y-scroll flex justify-center items-center scrollbar-hide">
+        <div className="flex pt-20 pb-10 px-20 h-screen">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel defaultSize={40}>
+                    <div className="pr-8 pl-1 h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
                         <Form {...form}>
                             <form
                                 onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-5 w-full"
+                                className="space-y-3 w-full"
                             >
                                 <FormField
                                     control={form.control}
@@ -291,12 +282,10 @@ const CreateMeeting = () => {
                                                     allowMultiple={false}
                                                     acceptedFileTypes={['image/*']}
                                                     name="image"
-                                                    files={field.value ? [field.value] : []}
+                                                    files={field.value instanceof File ? [field.value] : []}
                                                     onupdatefiles={(fileItems) => {
-                                                        console.log('image');
                                                         const file = fileItems[0]?.file ?? null;
-                                                        field.onChange(file); // React Hook Form에 파일 넣기
-                                                        console.log(getValues('image'));
+                                                        field.onChange(file);
 
                                                     }}
                                                     labelIdle='드래그해서 올리거나 <span class="filepond--label-action w-full">클릭해서 업로드</span>'
@@ -394,6 +383,11 @@ const CreateMeeting = () => {
                                                     {form.formState.errors.period.startDate.message}
                                                 </p>
                                             )}
+                                            {form.formState.errors.period?.endDate && (
+                                                <p className="text-red-500 text-sm mt-1">
+                                                    {form.formState.errors.period.endDate.message}
+                                                </p>
+                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -411,63 +405,102 @@ const CreateMeeting = () => {
                 <ResizableHandle withHandle />
 
                 <ResizablePanel defaultSize={60}>
-                    <div className="h-full flex justify-center items-center">
+                    <div className="h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
                         <div
                             id="map"
                             className="h-full w-full"
                             style={{ display: activeField === "location" ? "block" : "none" }}
                         />
-                        {activeField === "schedules" && (
+                        {activeField === "schedules" && date?.from && date?.to && (
                             <div className="w-full">
-                                <h2 className="text-xl font-semibold mb-2">일정 입력</h2>
-                                <ScrollArea className="h-[300px] border rounded-md p-2">
-                                    {schedules.map((schedule, index) => (
-                                        <div key={index} className="mb-4 p-2 border rounded-md">
-                                            <p className="font-medium">날짜: {schedule.date}</p>
-                                            {schedule.events.map((event, i) => (
-                                                <div key={i} className="ml-4">
-                                                    <p>🕒 {event.startTime} - {event.endTime}</p>
-                                                    <p>📌 {event.description}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
+                                <ScrollArea>
+                                    <Accordion type="multiple" className="w-full px-4">
+                                        {eachDayOfInterval({ start: date.from!, end: date.to! }).map((day) => {
+                                            const formattedDate = format(day, "yyyy-MM-dd");
+                                            return (
+                                                <AccordionItem value={formattedDate} key={formattedDate}>
+                                                    <AccordionTrigger className="font-bold text-lg border-2">
+                                                        {format(day, "yyyy년 MM월 dd일 (EEE)", { locale: undefined })}
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="space-y-4">
+                                                        {(schedules.find(s => s.date === formattedDate)?.events || []).map((event, i) => (
+                                                            <div key={i} className="grid grid-cols-5 gap-3 items-center">
+                                                                <Input
+                                                                    type="time"
+                                                                    value={event.startTime}
+                                                                    onChange={(e) => {
+                                                                        const newSchedules = [...schedules];
+                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].startTime = e.target.value;
+                                                                        setSchedules(newSchedules);
+                                                                        form.setValue("schedules", newSchedules);
+                                                                    }}
+                                                                />
+                                                                <Input
+                                                                    type="time"
+                                                                    value={event.endTime}
+                                                                    onChange={(e) => {
+                                                                        const newSchedules = [...schedules];
+                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].endTime = e.target.value;
+                                                                        setSchedules(newSchedules);
+                                                                        form.setValue("schedules", newSchedules);
+                                                                    }}
+                                                                />
+                                                                <Textarea
+                                                                    placeholder="설명"
+                                                                    className="col-span-2"
+                                                                    value={event.description}
+                                                                    onChange={(e) => {
+                                                                        const newSchedules = [...schedules];
+                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].description = e.target.value;
+                                                                        setSchedules(newSchedules);
+                                                                        form.setValue("schedules", newSchedules);
+                                                                    }}
+                                                                />
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    onClick={() => {
+                                                                        const newSchedules = schedules.map(s => {
+                                                                            if (s.date === formattedDate) {
+                                                                                return {
+                                                                                    ...s,
+                                                                                    events: s.events.filter((_, idx) => idx !== i)
+                                                                                }
+                                                                            }
+                                                                            return s;
+                                                                        });
+                                                                        setSchedules(newSchedules);
+                                                                        form.setValue("schedules", newSchedules);
+                                                                    }}
+                                                                >
+                                                                    삭제
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                const newSchedules = [...schedules];
+                                                                const scheduleForDate = newSchedules.find(s => s.date === formattedDate);
+                                                                if (scheduleForDate) {
+                                                                    scheduleForDate.events.push({ startTime: "", endTime: "", description: "" });
+                                                                } else {
+                                                                    newSchedules.push({
+                                                                        date: formattedDate,
+                                                                        events: [{ startTime: "", endTime: "", description: "" }],
+                                                                    });
+                                                                }
+                                                                setSchedules(newSchedules);
+                                                                form.setValue("schedules", newSchedules);
+                                                            }}
+                                                        >
+                                                            <Plus className="w-4 h-4 mr-2" /> 일정 추가
+                                                        </Button>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            );
+                                        })}
+                                    </Accordion>
                                 </ScrollArea>
-
-                                <div className="mt-4 space-y-2">
-                                    {/*<p className="text-gray-600">날짜 선택</p>*/}
-                                    {/*<DateTimePicker24h*/}
-                                    {/*    value={watch("period.startDate") ? new Date(watch("period.startDate")) : undefined}*/}
-                                    {/*    onChange={(date) => {*/}
-                                    {/*        if (date) {*/}
-                                    {/*            setValue("period.startDate", date.toISOString());*/}
-                                    {/*        }*/}
-                                    {/*    }}*/}
-                                    {/*/>*/}
-
-                                    {/*<p className="text-gray-600 mt-4">종료 날짜 선택</p>*/}
-                                    {/*<DateTimePicker24h*/}
-                                    {/*    value={watch("period.endDate") ? new Date(watch("period.endDate")) : undefined}*/}
-                                    {/*    onChange={(date) => {*/}
-                                    {/*        if (date) {*/}
-                                    {/*            setValue("period.endDate", date.toISOString());*/}
-                                    {/*        }*/}
-                                    {/*    }}*/}
-                                    {/*/>*/}
-
-                                    {/*<Button*/}
-                                    {/*    className="mt-4"*/}
-                                    {/*    onClick={() => {*/}
-                                    {/*        const newSchedule = {*/}
-                                    {/*            date: watch("period.startDate"),*/}
-                                    {/*            events: [],*/}
-                                    {/*        };*/}
-                                    {/*        setSchedules((prev) => [...prev, newSchedule]);*/}
-                                    {/*    }}*/}
-                                    {/*>*/}
-                                    {/*    일정 추가*/}
-                                    {/*</Button>*/}
-                                </div>
                             </div>
                         )}
                         {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
