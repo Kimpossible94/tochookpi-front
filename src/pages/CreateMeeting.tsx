@@ -30,10 +30,8 @@ const meetingSchema = z.object({
         lat: z.number().optional(),
     }).optional(),
     image: z.instanceof(File).optional(),
-    period: z.object({
-        startDate: z.string().min(1, "시작 날짜를 입력하세요."),
-        endDate: z.string().min(1, "종료 날짜를 입력하세요."),
-    }),
+    startDate: z.string().min(1, "시작 날짜를 입력하세요."),
+    endDate: z.string().min(1, "종료 날짜를 입력하세요."),
     schedules: z
         .array(
             z.object({
@@ -70,12 +68,13 @@ const CreateMeeting = () => {
             location: undefined,
             image: undefined,
             maxParticipantsCnt: 5,
-            period: { startDate: date?.from?.toISOString(), endDate: date?.to?.toISOString() },
+            startDate: date?.from?.toISOString(),
+            endDate: date?.to?.toISOString(),
             schedules: [],
         },
     });
 
-    const { setValue, getValues } = form;
+    const { setValue } = form;
 
     useEffect(() => {
         if (activeField === "location" && typeof window !== "undefined" && window.naver && !map) {
@@ -205,8 +204,19 @@ const CreateMeeting = () => {
         infoWindowList.current.push(infowindow);
     }
 
-    const onSubmit = (values: z.infer<typeof meetingSchema>) => {
-        console.log(values);
+    const onSubmit = async (values: z.infer<typeof meetingSchema>) => {
+        const formData = new FormData();
+
+        formData.append('meeting', new Blob([JSON.stringify(values)], {type: 'application/json'}));
+        if (values.image) formData.append("image", values.image);
+
+        try {
+            await api.post("/meetings", formData).then(() => {
+                alert("성공적으로 등록되었습니다.")
+            })
+        } catch (error) {
+            alert("등록에 실패했습니다.")
+        }
     };
 
     return (
@@ -328,7 +338,7 @@ const CreateMeeting = () => {
 
                                 <FormField
                                     control={form.control}
-                                    name="period"
+                                    name="startDate"
                                     render={() => (
                                         <FormItem>
                                             <FormLabel className="font-bold">모임 일자</FormLabel>
@@ -360,8 +370,8 @@ const CreateMeeting = () => {
                                                                 selected={date}
                                                                 onSelect={(range) => {
                                                                     setDate(range);
-                                                                    setValue("period.startDate", range?.from?.toISOString() || "");
-                                                                    setValue("period.endDate", range?.to?.toISOString() || "");
+                                                                    setValue("startDate", range?.from?.toISOString() || "");
+                                                                    setValue("endDate", range?.to?.toISOString() || "");
                                                                 }}
                                                                 numberOfMonths={2}
                                                             />
@@ -378,14 +388,14 @@ const CreateMeeting = () => {
                                                     </Button>
                                                 </div>
                                             </FormControl>
-                                            {form.formState.errors.period?.startDate && (
+                                            {form.formState.errors.startDate && (
                                                 <p className="text-red-500 text-sm mt-1">
-                                                    {form.formState.errors.period.startDate.message}
+                                                    {form.formState.errors.startDate.message}
                                                 </p>
                                             )}
-                                            {form.formState.errors.period?.endDate && (
+                                            {form.formState.errors.endDate && (
                                                 <p className="text-red-500 text-sm mt-1">
-                                                    {form.formState.errors.period.endDate.message}
+                                                    {form.formState.errors.endDate.message}
                                                 </p>
                                             )}
                                         </FormItem>
@@ -503,7 +513,7 @@ const CreateMeeting = () => {
                                 </ScrollArea>
                             </div>
                         )}
-                        {!activeField && <p className="text-gray-500">항목을 선택하면 여기 표시됩니다.</p>}
+                        {!activeField && <p className="text-gray-500 h-full content-center">항목을 선택하면 여기 표시됩니다.</p>}
                     </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
