@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, Plus} from "lucide-react";
+import {CalendarIcon, MapPin, Plus} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, eachDayOfInterval, format} from "date-fns";
@@ -206,9 +206,9 @@ const CreateMeeting = () => {
 
     const onSubmit = async (values: z.infer<typeof meetingSchema>) => {
         const formData = new FormData();
-
-        formData.append('meeting', new Blob([JSON.stringify(values)], {type: 'application/json'}));
+        const { image, ...dtoWithoutImage } = values; // 구조 분해 할당
         if (values.image) formData.append("image", values.image);
+        formData.append('meeting', new Blob([JSON.stringify(dtoWithoutImage)], {type: 'application/json'}));
 
         try {
             await api.post("/meetings", formData).then(() => {
@@ -233,7 +233,7 @@ const CreateMeeting = () => {
                                     control={form.control}
                                     name="title"
                                     render={({ field }) => (
-                                        <FormItem onClick={() => setActiveField(null)}>
+                                        <FormItem>
                                             <FormLabel className="font-bold">모임명</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="모임명을 입력해 주세요." {...field} />
@@ -247,7 +247,7 @@ const CreateMeeting = () => {
                                     control={form.control}
                                     name="description"
                                     render={({ field }) => (
-                                        <FormItem onClick={() => setActiveField(null)}>
+                                        <FormItem>
                                             <FormLabel className="font-bold">설명</FormLabel>
                                             <FormControl>
                                                 <Textarea placeholder="이번 모임은 어떤 모임인지 설명해 주세요. (예: 축구를 사랑하는 모임)" {...field} />
@@ -264,17 +264,37 @@ const CreateMeeting = () => {
                                         <FormItem onClick={() => setActiveField("location")}>
                                             <FormLabel className="font-bold">위치</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    placeholder="어디서 모이는지 검색해주세요."
-                                                    onKeyDown={handleLocationSearch}
-                                                    value={field.value?.address || ""}
-                                                    onChange={(e) => {
-                                                        field.onChange({
-                                                            ...field.value,
-                                                            address: e.target.value,
-                                                        });
-                                                    }}
-                                                />
+                                                {field.value?.lat ? (
+                                                    <div className="relative border rounded-xl p-4 bg-gray-50">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => field.onChange(undefined)}
+                                                            className="absolute top-2 right-3 text-gray-400 hover:text-gray-600"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                        <p className="text-sm text-gray-700 font-semibold mb-2">선택된 장소</p>
+                                                        <div className="flex">
+                                                            <MapPin/>
+                                                            <div className="ml-1">
+                                                                <p className="text-base text-gray-900 font-bold">{field.value.title}</p>
+                                                                <p className="text-sm text-gray-600">{field.value.address}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <Input
+                                                        placeholder="어디서 모이는지 검색해주세요."
+                                                        onKeyDown={handleLocationSearch}
+                                                        value={field.value?.address || ""}
+                                                        onChange={(e) => {
+                                                            field.onChange({
+                                                                ...field.value,
+                                                                address: e.target.value,
+                                                            });
+                                                        }}
+                                                    />
+                                                )}
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -285,7 +305,7 @@ const CreateMeeting = () => {
                                     control={form.control}
                                     name="image"
                                     render={({ field }) => (
-                                        <FormItem onClick={() => setActiveField(null)} className="w-full">
+                                        <FormItem className="w-full">
                                             <FormLabel className="font-bold">대표 이미지</FormLabel>
                                             <FormControl>
                                                 <FilePond
@@ -310,7 +330,7 @@ const CreateMeeting = () => {
                                     control={form.control}
                                     name="maxParticipantsCnt"
                                     render={({ field }) => (
-                                        <FormItem onClick={() => setActiveField(null)}>
+                                        <FormItem>
                                             <FormLabel className="font-bold">최대 참가자 수</FormLabel>
                                             <FormControl>
                                                 <div className="grid grid-cols-6 gap-5">
