@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, MapPin, Plus} from "lucide-react";
+import {CalendarIcon, CircleMinus, MapPin, MapPinX, MessageCircleX, Plus} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, eachDayOfInterval, format} from "date-fns";
@@ -51,6 +51,7 @@ const meetingSchema = z.object({
 
 const CreateMeeting = () => {
     const [activeField, setActiveField] = useState<string | null>(null);
+    const [addressSearchText, setAddressSearchText] = useState<string | null>(null);
     const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(),
@@ -125,6 +126,8 @@ const CreateMeeting = () => {
                             return;
                         }
 
+                        console.log(response.data);
+
                         for (let i = 0; i < response.data.length; i++) {
                             const data = response.data[i];
                             const lng = data.mapx / 1e7; // 경도 (x 값)
@@ -137,10 +140,10 @@ const CreateMeeting = () => {
                     const addressItem = response.v2.addresses[0];
                     const lng = Number(addressItem.x);
                     const lat = Number(addressItem.y);
-                    let title = '';
+                    let title = target.value;
 
                     for (const e of response.v2.addresses[0].addressElements) {
-                        if(e.types[0] === 'BUILDING_NAME') {
+                        if(e.types[0] === 'BUILDING_NAME' && e.shortName !== '') {
                             title = e.shortName;
                             break;
                         }
@@ -264,38 +267,40 @@ const CreateMeeting = () => {
                                         <FormItem onClick={() => setActiveField("location")}>
                                             <FormLabel className="font-bold">위치</FormLabel>
                                             <FormControl>
-                                                {field.value?.lat ? (
-                                                    <div className="relative border rounded-xl p-4 bg-gray-50">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => field.onChange(undefined)}
-                                                            className="absolute top-2 right-3 text-gray-400 hover:text-gray-600"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                        <p className="text-sm text-gray-700 font-semibold mb-2">선택된 장소</p>
-                                                        <div className="flex">
-                                                            <MapPin/>
-                                                            <div className="ml-1">
-                                                                <p className="text-base text-gray-900 font-bold">{field.value.title}</p>
-                                                                <p className="text-sm text-gray-600">{field.value.address}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
                                                     <Input
                                                         placeholder="어디서 모이는지 검색해주세요."
                                                         onKeyDown={handleLocationSearch}
-                                                        value={field.value?.address || ""}
-                                                        onChange={(e) => {
-                                                            field.onChange({
-                                                                ...field.value,
-                                                                address: e.target.value,
-                                                            });
-                                                        }}
                                                     />
-                                                )}
                                             </FormControl>
+                                            <div className="relative border rounded-xl p-4 bg-gray-50">
+                                                <p className="text-sm text-gray-700 font-semibold mb-2">선택된 장소</p>
+                                                {field.value?.title ? (
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex items-center">
+                                                            <MapPin />
+                                                            {field.value?.title && (
+                                                                <div className="ml-1">
+                                                                    <p className="text-base text-gray-900 font-bold">
+                                                                        {field.value?.title.replace(/<[^>]*>/g, '')}
+                                                                    </p>
+                                                                    {field.value?.address && (
+                                                                        <p className="text-sm text-gray-600">{field.value?.address}</p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => field.onChange(undefined)}
+                                                            className="text-red-400 hover:text-red-600"
+                                                        >
+                                                            <MapPinX size={18}/>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-gray-600">검색 후 장소 선택을 해야 적용됩니다.</div>
+                                                )}
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )}
