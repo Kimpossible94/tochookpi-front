@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, CircleMinus, MapPin, MapPinX, MessageCircleX, Plus} from "lucide-react";
+import {CalendarIcon, MapPin, MapPinX, Plus} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, eachDayOfInterval, format} from "date-fns";
