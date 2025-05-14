@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, MapPin, MapPinX, Plus} from "lucide-react";
+import {CalendarIcon, MapPin, MapPinX, Plus, Trash2} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, eachDayOfInterval, format} from "date-fns";
@@ -17,8 +17,10 @@ import api from "@/services/api";
 import {FilePond} from 'react-filepond'
 import 'filepond/dist/filepond.min.css'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
-import {ScrollArea} from "@/components/ui/scroll-area";
+import {cn} from "@/lib/utils";
+import {ko} from "date-fns/locale";
+import {Card} from "@/components/ui/card";
+import {Label} from "@/components/ui/label";
 
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
@@ -51,7 +53,7 @@ const meetingSchema = z.object({
 
 const CreateMeeting = () => {
     const [activeField, setActiveField] = useState<string | null>(null);
-    const [addressSearchText, setAddressSearchText] = useState<string | null>(null);
+    const [selectedDate, setSelectedDate] = useState<string>("");
     const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(),
@@ -60,6 +62,7 @@ const CreateMeeting = () => {
     const [map, setMap] = useState<naver.maps.Map | undefined>(undefined);
     const mapMarkerList = useRef<naver.maps.Marker[]>([]);
     const infoWindowList = useRef<naver.maps.InfoWindow[]>([]);
+    const selectedScheduleIndex = schedules.findIndex(s => s.date === selectedDate);
 
     const form = useForm<z.infer<typeof meetingSchema>>({
         resolver: zodResolver(meetingSchema),
@@ -74,6 +77,14 @@ const CreateMeeting = () => {
             schedules: [],
         },
     });
+
+    const scheduleErrors = form.formState.errors.schedules as {
+        events?: {
+            description?: { message?: string };
+            startTime?: { message?: string };
+            endTime?: { message?: string };
+        }[];
+    }[] | undefined;
 
     const { setValue } = form;
 
@@ -125,8 +136,6 @@ const CreateMeeting = () => {
                             alert("검색결과가 없습니다.");
                             return;
                         }
-
-                        console.log(response.data);
 
                         for (let i = 0; i < response.data.length; i++) {
                             const data = response.data[i];
@@ -319,7 +328,7 @@ const CreateMeeting = () => {
                                                     name="image"
                                                     files={field.value instanceof File ? [field.value] : []}
                                                     onupdatefiles={(fileItems) => {
-                                                        const file = fileItems[0]?.file ?? null;
+                                                        const file = fileItems[0]?.file ?? undefined;
                                                         field.onChange(file);
 
                                                     }}
@@ -446,96 +455,138 @@ const CreateMeeting = () => {
                             className="h-full w-full"
                             style={{ display: activeField === "location" ? "block" : "none" }}
                         />
+
                         {activeField === "schedules" && date?.from && date?.to && (
                             <div className="w-full">
-                                <ScrollArea>
-                                    <Accordion type="multiple" className="w-full px-4">
-                                        {eachDayOfInterval({ start: date.from!, end: date.to! }).map((day) => {
-                                            const formattedDate = format(day, "yyyy-MM-dd");
+                                <div className="flex overflow-x-auto space-x-2 px-4 py-2 border-b bg-white sticky top-0 z-10">
+                                    {eachDayOfInterval({ start: date.from, end: date.to }).map((day) => {
+                                        const formattedDate = format(day, "yyyy-MM-dd");
+                                        return (
+                                            <button
+                                                key={formattedDate}
+                                                onClick={() => setSelectedDate(formattedDate)}
+                                                className={cn(
+                                                    "px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap",
+                                                    selectedDate === formattedDate
+                                                        ? "bg-black text-white"
+                                                        : "bg-gray-100 hover:bg-gray-200"
+                                                )}
+                                            >
+                                                {format(day, "EEE", { locale: ko })}<br />
+                                                {format(day, "MM/dd")}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {selectedDate && (
+                                    <div className="p-4 flex flex-col w-full space-y-4">
+                                        {(schedules.find(s => s.date === selectedDate)?.events || []).map((event, i) => {
+                                            const eventError = scheduleErrors?.[selectedScheduleIndex]?.events?.[i];
+
                                             return (
-                                                <AccordionItem value={formattedDate} key={formattedDate}>
-                                                    <AccordionTrigger className="font-bold text-lg border-2">
-                                                        {format(day, "yyyy년 MM월 dd일 (EEE)", { locale: undefined })}
-                                                    </AccordionTrigger>
-                                                    <AccordionContent className="space-y-4">
-                                                        {(schedules.find(s => s.date === formattedDate)?.events || []).map((event, i) => (
-                                                            <div key={i} className="grid grid-cols-5 gap-3 items-center">
-                                                                <Input
-                                                                    type="time"
-                                                                    value={event.startTime}
-                                                                    onChange={(e) => {
-                                                                        const newSchedules = [...schedules];
-                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].startTime = e.target.value;
-                                                                        setSchedules(newSchedules);
-                                                                        form.setValue("schedules", newSchedules);
-                                                                    }}
-                                                                />
-                                                                <Input
-                                                                    type="time"
-                                                                    value={event.endTime}
-                                                                    onChange={(e) => {
-                                                                        const newSchedules = [...schedules];
-                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].endTime = e.target.value;
-                                                                        setSchedules(newSchedules);
-                                                                        form.setValue("schedules", newSchedules);
-                                                                    }}
-                                                                />
-                                                                <Textarea
-                                                                    placeholder="설명"
-                                                                    className="col-span-2"
-                                                                    value={event.description}
-                                                                    onChange={(e) => {
-                                                                        const newSchedules = [...schedules];
-                                                                        newSchedules.find(s => s.date === formattedDate)!.events[i].description = e.target.value;
-                                                                        setSchedules(newSchedules);
-                                                                        form.setValue("schedules", newSchedules);
-                                                                    }}
-                                                                />
-                                                                <Button
-                                                                    variant="destructive"
-                                                                    onClick={() => {
-                                                                        const newSchedules = schedules.map(s => {
-                                                                            if (s.date === formattedDate) {
-                                                                                return {
-                                                                                    ...s,
-                                                                                    events: s.events.filter((_, idx) => idx !== i)
-                                                                                }
-                                                                            }
-                                                                            return s;
-                                                                        });
-                                                                        setSchedules(newSchedules);
-                                                                        form.setValue("schedules", newSchedules);
-                                                                    }}
-                                                                >
-                                                                    삭제
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                        <Button
-                                                            variant="outline"
-                                                            onClick={() => {
+                                                <Card key={i} className="w-full p-4 space-y-3 shadow-sm border">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <Input
+                                                            placeholder="일정을 적어주세요."
+                                                            style={{ fontSize: "1.1rem" }}
+                                                            className="pl-0 flex-1 focus-visible:ring-0 border-none shadow-none font-bold"
+                                                            value={event.description}
+                                                            onChange={(e) => {
                                                                 const newSchedules = [...schedules];
-                                                                const scheduleForDate = newSchedules.find(s => s.date === formattedDate);
-                                                                if (scheduleForDate) {
-                                                                    scheduleForDate.events.push({ startTime: "", endTime: "", description: "" });
-                                                                } else {
-                                                                    newSchedules.push({
-                                                                        date: formattedDate,
-                                                                        events: [{ startTime: "", endTime: "", description: "" }],
-                                                                    });
-                                                                }
+                                                                newSchedules.find(s => s.date === selectedDate)!.events[i].description = e.target.value;
                                                                 setSchedules(newSchedules);
                                                                 form.setValue("schedules", newSchedules);
                                                             }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newSchedules = schedules.map(s => {
+                                                                    if (s.date === selectedDate) {
+                                                                        return {
+                                                                            ...s,
+                                                                            events: s.events.filter((_, idx) => idx !== i)
+                                                                        };
+                                                                    }
+                                                                    return s;
+                                                                });
+                                                                setSchedules(newSchedules);
+                                                                form.setValue("schedules", newSchedules);
+                                                            }}
+                                                            className="text-red-400 hover:text-red-600 ml-2"
                                                         >
-                                                            <Plus className="w-4 h-4 mr-2" /> 일정 추가
-                                                        </Button>
-                                                    </AccordionContent>
-                                                </AccordionItem>
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+
+                                                    {eventError?.description?.message && (
+                                                        <p className="text-sm text-red-500">{eventError.description.message}</p>
+                                                    )}
+
+                                                    <div className="flex">
+                                                        <div className="flex items-center gap-2">
+                                                            <Label className="text-sm whitespace-nowrap font-bold">시작 시간</Label>
+                                                            <Input
+                                                                type="time"
+                                                                value={event.startTime}
+                                                                onChange={(e) => {
+                                                                    const newSchedules = [...schedules];
+                                                                    newSchedules.find(s => s.date === selectedDate)!.events[i].startTime = e.target.value;
+                                                                    setSchedules(newSchedules);
+                                                                    form.setValue("schedules", newSchedules);
+                                                                }}
+                                                            />
+                                                            {eventError?.startTime?.message && (
+                                                                <p className="text-sm text-red-500">{eventError.startTime.message}</p>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2 ml-3">
+                                                            <Label className="text-sm whitespace-nowrap font-bold">종료 시간</Label>
+                                                            <Input
+                                                                type="time"
+                                                                value={event.endTime}
+                                                                onChange={(e) => {
+                                                                    const newSchedules = [...schedules];
+                                                                    newSchedules.find(s => s.date === selectedDate)!.events[i].endTime = e.target.value;
+                                                                    setSchedules(newSchedules);
+                                                                    form.setValue("schedules", newSchedules);
+                                                                }}
+                                                            />
+                                                            {eventError?.endTime?.message && (
+                                                                <p className="text-sm text-red-500">{eventError.endTime.message}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </Card>
                                             );
                                         })}
-                                    </Accordion>
-                                </ScrollArea>
+
+                                        <div className="pt-2">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    const newSchedules = [...schedules];
+                                                    const scheduleForDate = newSchedules.find(s => s.date === selectedDate);
+                                                    if (scheduleForDate) {
+                                                        scheduleForDate.events.push({ startTime: "", endTime: "", description: "" });
+                                                    } else {
+                                                        newSchedules.push({
+                                                            date: selectedDate,
+                                                            events: [{ startTime: "", endTime: "", description: "" }],
+                                                        });
+                                                    }
+                                                    setSchedules(newSchedules);
+                                                    form.setValue("schedules", newSchedules);
+                                                }}
+                                            >
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                일정 추가
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                         {!activeField && <p className="text-gray-500 h-full content-center">항목을 선택하면 여기 표시됩니다.</p>}
