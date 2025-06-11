@@ -40,7 +40,7 @@ function ConditionalLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
             {!shouldShowLayout && <Header />}
-            <main>{children}</main>
+            <main className={!shouldShowLayout ? "pt-[80px] h-screen" : "h-screen"}>{children}</main>
             {!shouldShowLayout && <Footer />}
         </>
     );

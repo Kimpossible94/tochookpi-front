@@ -232,7 +232,7 @@ const CreateMeeting = () => {
     };
 
     return (
-        <div className="flex pt-20 pb-10 px-20 h-screen">
+        <div className="flex py-10 px-20 h-full">
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={40}>
                     <div className="pr-8 pl-1 h-full overflow-y-auto flex justify-center items-start scrollbar-hide">

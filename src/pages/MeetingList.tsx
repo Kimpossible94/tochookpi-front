@@ -1,204 +1,256 @@
-import React from "react";
-import {Meeting} from "@/redux/types/meeting";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import React, {useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {DateTimePicker24h} from "@/components/ui/DateTimePicker24h";
-import logo from "@/assets/logo.png";
-import {Checkbox} from "@/components/ui/checkbox";
-import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
-import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
-
-// 더미 데이터
-const dummyMeetings: Meeting[] = [];
-
-const categories = [
-    { label: "게임", value: "game" },
-    { label: "음식", value: "food" },
-    { label: "전시회", value: "exhibition" },
-    { label: "운동", value: "sports" },
-    { label: "여행", value: "travel" },
-    { label: "스터디", value: "study" },
-];
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
+import {ChevronDown, Filter, Search, Users, X} from "lucide-react";
+import defaultImage from "../assets/undraw_conversation_15p8.svg";
+import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {Meeting} from "@/redux/types/meeting";
+import api from "@/services/api";
+import {Badge} from "@/components/ui/badge";
+import {useSearchParams} from "react-router-dom";
 
 const FilterSchema = z.object({
-    categories: z.array(z.string()).optional(),
     searchTerm: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    category: z.array(z.string()).optional(),
+    sortOption: z.enum(["최신순", "인기순"]).optional(),
 });
 
 type FilterFormType = z.infer<typeof FilterSchema>;
 
+const categories = ["스터디", "운동", "취미", "여행", "음악"];
+const sortOptions = ["최신순", "인기순"];
+
 const MeetingListPage: React.FC = () => {
+    const [meetings, setMeetings] = useState<Meeting[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [sortPopoverOpen, setSortPopoverOpen] = useState<boolean>(false);
+    const [searchParams] = useSearchParams();
+
     const form = useForm<FilterFormType>({
         resolver: zodResolver(FilterSchema),
         defaultValues: {
-            categories: [],
-            searchTerm: "",
-            startDate: "",
-            endDate: "",
-        }
-    })
+            searchTerm: searchParams.get("searchTerm") ?? "",
+            category: [],
+            sortOption: "최신순",
+        },
+    });
 
-    function onSubmit(data: FilterFormType) {
-        console.log("필터 데이터:", data);
+    const fetchMeetings = async (filters?: FilterFormType) => {
+        try {
+            setLoading(true);
+            let query = "";
+            if (filters) {
+                const params = new URLSearchParams();
+                if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+                if (filters.category && filters.category.length > 0) {
+                    filters.category.forEach(cat => params.append("category", cat));
+                }
+                if (filters.sortOption) {
+                    const sortMap: Record<string, string> = {
+                        최신순: "latest",
+                        인기순: "popular",
+                    };
+                    params.append("sort", sortMap[filters.sortOption]);
+                }
+                query = "?" + params.toString();
+            }
+
+            const response = await api.get(`/meetings${query}`);
+            setMeetings(response.data);
+        } catch (error) {
+            console.error("모임 데이터를 불러오는 중 오류 발생:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMeetings(form.getValues());
+    }, []);
+
+    const onSubmit = (data: FilterFormType) => {
+        fetchMeetings(data);
     }
 
+    const handleCategorySelect = (category: string) => {
+        const current = form.getValues("category") || [];
+        const isAlreadySelected = current.includes(category);
+
+        const newCategories = isAlreadySelected
+            ? current // 이미 있으면 기존 목록 반환
+            : [...current, category]; // 기존 목록에 없으면 추가
+
+        form.setValue("category", newCategories);
+    };
+
+    const handleCategoryDelete = (category: string) => {
+        const current = form.getValues("category") || [];
+        const newCategories = current.filter((cat) => cat !== category);
+        form.setValue("category", newCategories);
+    }
+
+    const handleSortChange = (sort: FilterFormType["sortOption"]) => {
+        form.setValue("sortOption", sort);
+        setSortPopoverOpen(false);
+    };
+
     return (
-        <div className="flex flex-col lg:flex-row px-20 pt-32 gap-4">
-            {/* 모임 목록 */}
-            <div className="lg:w-3/4 mr-5">
-                <h2 className="text-2xl font-bold">모임 목록</h2>
-                <div className="flex flex-col gap-4 mt-10">
-                    {dummyMeetings.map((meeting) => (
-                        <Dialog>
-                            <DialogTrigger>
-                                <Card
-                                    key={meeting.id}
-                                    className="transition-all duration-300 hover:border-red-400 hover:shadow-lg hover:shadow-red-300 text-left"
-                                >
-                                    <div className="flex items-center">
-                                        <img
-                                            src={meeting.image !== '' ? meeting.image : logo}
-                                            alt={meeting.title}
-                                            className="w-32 h-32 object-contain rounded-l-md"
-                                        />
-                                        <CardContent className="p-4 flex-1">
-                                            <h3 className="text-lg font-semibold">{meeting.title}</h3>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                {meeting.description}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground mt-2">
-                                                {meeting.currentParticipantsCnt} /{" "}
-                                                {meeting.maxParticipantsCnt} 명 참여 중
-                                            </p>
-                                        </CardContent>
-                                    </div>
-                                </Card>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-full max-h-full sm:max-w-[80%] sm:max-h-[80%] w-full h-full">
-                                <MeetingDetail meetingId={meeting.id} />
-                            </DialogContent>
-                        </Dialog>
-                    ))}
+        <div className="flex flex-col w-full px-20 pt-4 pb-16">
+            {form.getValues("searchTerm") && (
+                <div className="w-full py-10">
+                    <p className="font-bold text-4xl text-center">
+                        {form.getValues("searchTerm")}
+                    </p>
+                    <p className="text-center text-gray-500 mt-1">에 대한 검색결과입니다.</p>
                 </div>
+            )}
+
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex items-center mb-6 w-full gap-6 justify-between"
+            >
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" className="flex items-center gap-2">
+                            카테고리 <ChevronDown size={16} />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-36 max-h-36 overflow-y-auto">
+                        <div className="flex flex-col space-y-2">
+                            {categories.map((cat) => (
+                                <Button
+                                    key={cat}
+                                    variant="ghost"
+                                    className="justify-start"
+                                    onClick={() => handleCategorySelect(cat)}
+                                >
+                                    {cat}
+                                </Button>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                <div className="relative w-full pl-4">
+                    <Input
+                        type="text"
+                        placeholder="모임 검색"
+                        {...form.register("searchTerm")}
+                        className="flex-1"
+                    />
+                    <button
+                        type="submit"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 pr-2 py-1 text-sm hover:text-gray-400 focus:outline-none"
+                    >
+                        <Search />
+                    </button>
+                </div>
+
+                <Popover open={sortPopoverOpen} onOpenChange={setSortPopoverOpen}>
+                    <PopoverTrigger asChild onClick={() => setSortPopoverOpen(true)}>
+                        <Button variant="outline" className="flex items-center gap-2">
+                            <Filter size={16} /> {form.getValues("sortOption")}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-40">
+                        <div className="flex flex-col space-y-2">
+                            {sortOptions.map((option) => (
+                                <Button
+                                    key={option}
+                                    variant="ghost"
+                                    className="justify-start"
+                                    onClick={() => handleSortChange(option as "최신순" | "인기순")}
+                                >
+                                    {option}
+                                </Button>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </form>
+
+            <div className="flex gap-2 flex-wrap mb-4">
+                {form.watch("category")?.map((c) => (
+                    <Badge
+                        key={c}
+                        variant="secondary"
+                        className="flex items-center gap-1 px-3 py-1 rounded-full"
+                    >
+                        {c}
+                        <button
+                            type="button"
+                            onClick={() => handleCategoryDelete(c)}
+                        >
+                            <X className="w-3 h-3 ml-1 hover:text-red-500" />
+                        </button>
+                    </Badge>
+                ))}
             </div>
 
-            {/* 필터 폼 */}
-            <Card className="lg:w-1/4 max-h-fit sticky top-32">
-                <CardHeader>
-                    <CardTitle className="text-lg">필터 설정</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <FormField
-                                control={form.control}
-                                name="categories"
-                                render={({ field }: { field:any }) => (
-                                    <FormItem>
-                                        <FormLabel>카테고리</FormLabel>
-                                        <FormControl>
-                                            <div className="flex flex-col gap-2">
-                                                {categories.map((category) => (
-                                                    <div key={category.value} className="flex items-center gap-2">
-                                                        <Checkbox
-                                                            id={category.value}
-                                                            checked={field.value?.includes(category.value)} // 선택 여부
-                                                            onCheckedChange={(checked: boolean) => {
-                                                                const newValue = checked
-                                                                    ? [...(field.value || []), category.value] // 체크되면 추가
-                                                                    : (field.value || []).filter((v: string) => v !== category.value); // 체크 해제되면 제거
-                                                                field.onChange(newValue); // 상태 업데이트
-                                                            }}
-                                                            className="mr-2"
-                                                        />
-                                                        <label htmlFor={category.value} className="text-sm">
-                                                            {category.label}
-                                                        </label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+            <div>
+                {loading ? (
+                    <p className="text-center text-gray-400">로딩 중...</p>
+                ) : meetings.length === 0 ? (
+                    <p className="text-center text-gray-400">모임이 없습니다.</p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {meetings.map((meeting) => (
+                            <div key={meeting.id} className="flex flex-col">
+                                <div
+                                    className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition p-2 bg-gray-50"
+                                >
+                                    <img
+                                        src={meeting.image || defaultImage}
+                                        alt=""
+                                        className="w-full h-48 object-contain object-center"
+                                    />
 
-                            {/* 검색어 입력 */}
-                            <FormField
-                                control={form.control}
-                                name="searchTerm"
-                                render={({ field }: { field:any }) => (
-                                    <FormItem>
-                                        <FormLabel>검색어</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="검색어를 입력하세요" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                    <div className="absolute left-3 top-2 flex items-center gap-1">
+                                        <span
+                                            className={`w-2.5 h-2.5 rounded-full
+                                            ${meeting.status === "ONGOING" ? "bg-green-500"
+                                                : meeting.status === "ENDED" ? "bg-gray-400" : "bg-blue-400"
+                                            }`}
+                                        />
+                                        <span className="text-xs font-medium text-gray-700">
+                                            {meeting.status === "ONGOING" ? "진행중"
+                                                : meeting.status === "ENDED"? "종료됨" : "예정"}
+                                        </span>
+                                    </div>
 
-                            {/* 시작 날짜 */}
-                            <FormField
-                                control={form.control}
-                                name="startDate"
-                                render={({ field }: { field:any }) => (
-                                    <FormItem>
-                                        <FormLabel>시작 날짜</FormLabel>
-                                        <FormControl>
-                                            <DateTimePicker24h
-                                                value={field.value ? new Date(field.value) : undefined}
-                                                onChange={(date) => {
-                                                    if (date) {
-                                                        field.onChange(date.toISOString()); // ISO 형식으로 저장
-                                                    } else {
-                                                        field.onChange(null); // 값이 없으면 null 처리
-                                                    }
-                                                }}
+                                    <div className='flex text-sm font-semibold absolute right-3 top-2'>
+                                        <Avatar className="w-5 h-5">
+                                            <AvatarImage
+                                                src={
+                                                    meeting.organizer?.profileImage ||
+                                                    "https://github.com/shadcn.png"
+                                                }
                                             />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="endDate"
-                                render={({ field }: { field:any }) => (
-                                    <FormItem>
-                                        <FormLabel>종료 날짜</FormLabel>
-                                        <FormControl>
-                                            <DateTimePicker24h
-                                                value={field.value ? new Date(field.value) : undefined}
-                                                onChange={(date) => {
-                                                    if (date) {
-                                                        field.onChange(date.toISOString());
-                                                    } else {
-                                                        field.onChange(null);
-                                                    }
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <div className="flex justify-end">
-                                <Button type="submit">검색</Button>
+                                        </Avatar>
+                                        <span className="ml-1">{meeting.organizer?.username}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 text-sm flex justify-between font-semibold">
+                                    <p className="truncate text-base content-center">
+                                        {meeting.title}
+                                    </p>
+                                    <p className="text-gray-500 mt-1">
+                                        {meeting.period?.startDate}
+                                    </p>
+                                    <p className="text-gray-600 mt-1 flex items-center">
+                                        <Users className="w-4 h-4 mr-2" />
+                                        <span>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</span>
+                                    </p>
+                                </div>
                             </div>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

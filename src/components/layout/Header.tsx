@@ -91,7 +91,6 @@ const Header = () => {
 
     return (
         <header className="fixed top-0 w-full z-[200] px-10 py-4 flex items-center justify-between bg-transparent backdrop-blur-md">
-            {/* 로고 */}
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/">
                     <img
@@ -100,24 +99,8 @@ const Header = () => {
                         className="max-w-[100px]"
                     />
                 </Link>
-
-                {/* 검색창 */}
-                <div className="relative w-full pl-4">
-                    <input
-                        type="text"
-                        placeholder="모임을 검색하세요..."
-                        className="w-full py-2 pl-5 text-sm rounded-3xl border border-gray-200 bg-gray-100 focus:outline-none hover:border-red-400 hover:bg-white focus:border-red-400 focus:bg-white duration-150"
-                    />
-                    <button
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 text-sm text-white bg-red-400 rounded-3xl hover:opacity-80 focus:outline-none"
-                        onClick={() => console.log("검색 버튼 클릭됨")}
-                    >
-                        검색
-                    </button>
-                </div>
             </div>
 
-            {/* 메뉴 및 알림 */}
             <div className="flex items-center space-x-4 text-sm">
                 <NavigationMenu className="mr-10">
                     <NavigationMenuList>
@@ -138,16 +121,11 @@ const Header = () => {
                             </NavigationMenuContent>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            <Link to="/docs">
-                                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                    사용방법
-                                </NavigationMenuLink>
-                            </Link>
+                            <Link to="/docs">사용방법</Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
 
-                {/* 알림 아이콘 */}
                 <div className="relative">
                     <button
                         onClick={toggleNotifications}
