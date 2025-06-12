@@ -8,7 +8,6 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
     NavigationMenuTrigger,
-    navigationMenuTriggerStyle,
 } from "../ui/navigation-menu";
 import {cn} from "@/lib/utils";
 import {BellIcon} from "@radix-ui/react-icons";
@@ -90,7 +89,7 @@ const Header = () => {
     }
 
     return (
-        <header className="fixed top-0 w-full z-[200] px-10 py-4 flex items-center justify-between bg-transparent backdrop-blur-md">
+        <header className="fixed top-0 w-full z-[20] px-10 py-4 flex items-center justify-between bg-transparent backdrop-blur-md">
             <div className="flex items-center space-x-4 w-full max-w-lg">
                 <Link to="/">
                     <img
@@ -141,7 +140,7 @@ const Header = () => {
                     </button>
 
                     {isNotificationsOpen && (
-                        <div className="absolute right-0 mt-2 w-72 max-h-64 overflow-y-auto p-4 bg-white shadow-md rounded-md z-50">
+                        <div className="absolute right-0 mt-2 w-72 max-h-64 overflow-y-auto p-4 bg-white shadow-md rounded-md z-20">
                             <ul>
                                 {notifications.length > 0 ? (
                                     notifications.map((notification, index) => (

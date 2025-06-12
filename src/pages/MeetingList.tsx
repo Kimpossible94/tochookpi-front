@@ -12,6 +12,8 @@ import {Meeting} from "@/redux/types/meeting";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
 import {useSearchParams} from "react-router-dom";
+import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
+import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 
 const FilterSchema = z.object({
     searchTerm: z.string().optional(),
@@ -200,40 +202,47 @@ const MeetingListPage: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {meetings.map((meeting) => (
                             <div key={meeting.id} className="flex flex-col">
-                                <div
-                                    className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition p-2 bg-gray-50"
-                                >
-                                    <img
-                                        src={meeting.image || defaultImage}
-                                        alt=""
-                                        className="w-full h-48 object-contain object-center"
-                                    />
+                                <Dialog>
+                                    <DialogTrigger>
+                                        <div
+                                            className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition p-2 bg-gray-50"
+                                        >
+                                            <img
+                                                src={meeting.image || defaultImage}
+                                                alt=""
+                                                className="w-full h-48 object-contain object-center"
+                                            />
 
-                                    <div className="absolute left-3 top-2 flex items-center gap-1">
+                                            <div className="absolute left-3 top-2 flex items-center gap-1">
                                         <span
                                             className={`w-2.5 h-2.5 rounded-full
                                             ${meeting.status === "ONGOING" ? "bg-green-500"
                                                 : meeting.status === "ENDED" ? "bg-gray-400" : "bg-blue-400"
                                             }`}
                                         />
-                                        <span className="text-xs font-medium text-gray-700">
+                                                <span className="text-xs font-medium text-gray-700">
                                             {meeting.status === "ONGOING" ? "진행중"
                                                 : meeting.status === "ENDED"? "종료됨" : "예정"}
                                         </span>
-                                    </div>
+                                            </div>
 
-                                    <div className='flex text-sm font-semibold absolute right-3 top-2'>
-                                        <Avatar className="w-5 h-5">
-                                            <AvatarImage
-                                                src={
-                                                    meeting.organizer?.profileImage ||
-                                                    "https://github.com/shadcn.png"
-                                                }
-                                            />
-                                        </Avatar>
-                                        <span className="ml-1">{meeting.organizer?.username}</span>
-                                    </div>
-                                </div>
+                                            <div className='flex text-sm font-semibold absolute right-3 top-2'>
+                                                <Avatar className="w-5 h-5">
+                                                    <AvatarImage
+                                                        src={
+                                                            meeting.organizer?.profileImage ||
+                                                            "https://github.com/shadcn.png"
+                                                        }
+                                                    />
+                                                </Avatar>
+                                                <span className="ml-1">{meeting.organizer?.username}</span>
+                                            </div>
+                                        </div>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-full max-h-full sm:max-h-[80%] w-full h-full z-[999]">
+                                        <MeetingDetail meetingId={meeting.id} />
+                                    </DialogContent>
+                                </Dialog>
                                 <div className="mt-3 text-sm flex justify-between font-semibold">
                                     <p className="truncate text-base content-center">
                                         {meeting.title}
