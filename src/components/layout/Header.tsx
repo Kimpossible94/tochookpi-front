@@ -104,7 +104,7 @@ const Header = () => {
                 <NavigationMenu className="mr-10">
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger>모임</NavigationMenuTrigger>
+                            <NavigationMenuTrigger className="font-bold">모임</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-[100px] gap-3 p-4 md:w-[200px] md:grid-cols-1 lg:w-[300px]">
                                     {components.map((component) => (
@@ -120,7 +120,7 @@ const Header = () => {
                             </NavigationMenuContent>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            <Link to="/docs">사용방법</Link>
+                            <Link to="/docs" className="font-bold">사용방법</Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

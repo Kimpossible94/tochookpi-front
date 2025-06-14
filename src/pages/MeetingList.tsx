@@ -8,7 +8,7 @@ import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover"
 import {ChevronDown, Filter, Search, Users, X} from "lucide-react";
 import defaultImage from "../assets/undraw_conversation_15p8.svg";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
-import {Meeting} from "@/redux/types/meeting";
+import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
 import {useSearchParams} from "react-router-dom";
@@ -23,7 +23,6 @@ const FilterSchema = z.object({
 
 type FilterFormType = z.infer<typeof FilterSchema>;
 
-const categories = ["스터디", "운동", "취미", "여행", "음악"];
 const sortOptions = ["최신순", "인기순"];
 
 const MeetingListPage: React.FC = () => {
@@ -49,7 +48,7 @@ const MeetingListPage: React.FC = () => {
                 const params = new URLSearchParams();
                 if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
                 if (filters.category && filters.category.length > 0) {
-                    filters.category.forEach(cat => params.append("category", cat));
+                    filters.category.forEach((cat) => params.append("category", cat));
                 }
                 if (filters.sortOption) {
                     const sortMap: Record<string, string> = {
@@ -76,7 +75,7 @@ const MeetingListPage: React.FC = () => {
 
     const onSubmit = (data: FilterFormType) => {
         fetchMeetings(data);
-    }
+    };
 
     const handleCategorySelect = (category: string) => {
         const current = form.getValues("category") || [];
@@ -93,7 +92,7 @@ const MeetingListPage: React.FC = () => {
         const current = form.getValues("category") || [];
         const newCategories = current.filter((cat) => cat !== category);
         form.setValue("category", newCategories);
-    }
+    };
 
     const handleSortChange = (sort: FilterFormType["sortOption"]) => {
         form.setValue("sortOption", sort);
@@ -104,12 +103,25 @@ const MeetingListPage: React.FC = () => {
         <div className="flex flex-col w-full px-20 pt-4 pb-16">
             {form.getValues("searchTerm") && (
                 <div className="w-full py-10">
-                    <p className="font-bold text-4xl text-center">
-                        {form.getValues("searchTerm")}
-                    </p>
+                    <p className="font-bold text-4xl text-center">{form.getValues("searchTerm")}</p>
                     <p className="text-center text-gray-500 mt-1">에 대한 검색결과입니다.</p>
                 </div>
             )}
+
+            <div className="flex gap-2 mb-4">
+                {form.watch("category")?.map((c) => (
+                    <Badge
+                        key={c}
+                        variant="secondary"
+                        className="flex items-center gap-1 px-3 py-1 rounded-full"
+                    >
+                        {MEETING_CATEGORY_LABELS[c as keyof typeof MEETING_CATEGORY_LABELS]}
+                        <button type="button" onClick={() => handleCategoryDelete(c)}>
+                            <X className="w-3 h-3 ml-1 hover:text-red-500" />
+                        </button>
+                    </Badge>
+                ))}
+            </div>
 
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -123,14 +135,14 @@ const MeetingListPage: React.FC = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-36 max-h-36 overflow-y-auto">
                         <div className="flex flex-col space-y-2">
-                            {categories.map((cat) => (
+                            {MEETING_CATEGORIES.map((cat) => (
                                 <Button
                                     key={cat}
                                     variant="ghost"
                                     className="justify-start"
                                     onClick={() => handleCategorySelect(cat)}
                                 >
-                                    {cat}
+                                    {MEETING_CATEGORY_LABELS[cat]}
                                 </Button>
                             ))}
                         </div>
@@ -174,24 +186,6 @@ const MeetingListPage: React.FC = () => {
                     </PopoverContent>
                 </Popover>
             </form>
-
-            <div className="flex gap-2 flex-wrap mb-4">
-                {form.watch("category")?.map((c) => (
-                    <Badge
-                        key={c}
-                        variant="secondary"
-                        className="flex items-center gap-1 px-3 py-1 rounded-full"
-                    >
-                        {c}
-                        <button
-                            type="button"
-                            onClick={() => handleCategoryDelete(c)}
-                        >
-                            <X className="w-3 h-3 ml-1 hover:text-red-500" />
-                        </button>
-                    </Badge>
-                ))}
-            </div>
 
             <div>
                 {loading ? (

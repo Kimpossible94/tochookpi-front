@@ -21,10 +21,13 @@ import {cn} from "@/lib/utils";
 import {ko} from "date-fns/locale";
 import {Card} from "@/components/ui/card";
 import {Label} from "@/components/ui/label";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
 
 const meetingSchema = z.object({
     title: z.string().min(1, "모임 제목을 입력하세요."),
     description: z.string().optional(),
+    category: z.string().min(1, "모임 카테고리를 설정해주세요."),
     location: z.object({
         title: z.string().optional(),
         address: z.string().optional(),
@@ -69,6 +72,7 @@ const CreateMeeting = () => {
         defaultValues: {
             title: "",
             description: "",
+            category: "",
             location: undefined,
             image: undefined,
             maxParticipantsCnt: 5,
@@ -221,7 +225,6 @@ const CreateMeeting = () => {
         const { image, ...dtoWithoutImage } = values; // 구조 분해 할당
         if (values.image) formData.append("image", values.image);
         formData.append('meeting', new Blob([JSON.stringify(dtoWithoutImage)], {type: 'application/json'}));
-
         try {
             await api.post("/meetings", formData).then(() => {
                 alert("성공적으로 등록되었습니다.")
@@ -340,35 +343,65 @@ const CreateMeeting = () => {
                                     )}
                                 />
 
-                                <FormField
-                                    control={form.control}
-                                    name="maxParticipantsCnt"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="font-bold">최대 참가자 수</FormLabel>
-                                            <FormControl>
-                                                <div className="grid grid-cols-6 gap-5">
-                                                    <Slider
-                                                        min={1}
-                                                        max={40}
-                                                        step={1}
-                                                        value={[field.value || 0]}
-                                                        onValueChange={(value) => field.onChange(value[0])}
-                                                        className="col-span-5"
-                                                    />
-                                                    <Input
-                                                        type="number"
-                                                        value={field.value || undefined}
-                                                        onChange={(e) =>
-                                                            field.onChange(Math.min(40, Number(e.target.value)))}
-                                                        className="col-span-1"
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <div className="grid grid-cols-2 gap-5">
+                                    <FormField
+                                        control={form.control}
+                                        name="maxParticipantsCnt"
+                                        render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel className="font-bold">최대 참가자 수</FormLabel>
+                                                <FormControl>
+                                                    <div className="grid grid-cols-3 gap-5 col-span-1">
+                                                        <Slider
+                                                            min={1}
+                                                            max={40}
+                                                            step={1}
+                                                            value={[field.value || 0]}
+                                                            onValueChange={(value) => field.onChange(value[0])}
+                                                            className="col-span-2"
+                                                        />
+                                                        <Input
+                                                            type="number"
+                                                            value={field.value || undefined}
+                                                            onChange={(e) =>
+                                                                field.onChange(Math.min(40, Number(e.target.value)))}
+                                                            className="col-span-1"
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage/>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="category"
+                                        render={({field}) => (
+                                            <FormItem className="col-span-1">
+                                                <FormLabel className="font-bold">카테고리</FormLabel>
+                                                <FormControl>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="카테고리를 선택하세요"/>
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {MEETING_CATEGORIES.map((cat) => (
+                                                                <SelectItem key={cat}
+                                                                            value={cat}
+                                                                            className="py-2"
+                                                                >
+                                                                    {MEETING_CATEGORY_LABELS[cat]}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormControl>
+                                                <FormMessage/>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
                                 <FormField
                                     control={form.control}
