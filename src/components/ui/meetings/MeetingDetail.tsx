@@ -3,6 +3,7 @@ import {Meeting} from "@/redux/types/meeting";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {Spinner} from "@/components/ui/spinner";
 import api from "@/services/api";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -43,36 +44,47 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
     }
 
     return (
-        <div className="relative p-6">
-            <h2 className="text-2xl font-bold">{meeting.title}</h2>
-            <p className="mt-2 text-lg">{meeting.description}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-4 grid-rows-1 lg:grid-rows-4 gap-3">
+            <Card className="col-span-1 lg:col-span-1 lg:row-span-2">
+                <CardHeader>
+                    <CardTitle>
+                        참가자
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
 
-            <div className="mt-6">
-                <h3 className="text-xl font-semibold">참가자 정보</h3>
-                <div className="flex flex-wrap gap-2 mt-4">
-                    {meeting.participants?.map((user, idx) => (
-                        <div key={idx} className="flex items-center space-x-2">
-                            <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" />
-                            </Avatar>
-                            <span>{user.username}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
+            <Card className="col-span-1 lg:col-span-3 lg:row-span-1">
+                <CardHeader>
+                    <CardTitle>
+                        타이틀
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
 
-            <div className="mt-6">
-                <h3 className="text-xl font-semibold">참가 현황</h3>
-                <p className="mt-2 text-lg">
-                    {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt} 명
-                </p>
-            </div>
+                </CardContent>
+            </Card>
+            <Card className="col-span-1 lg:col-span-3 lg:row-span-3">
+                <CardHeader>
+                    <CardTitle>
+                        상세내용
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-300">
-                <button className="w-full py-2 bg-red-400 text-white hover:bg-red-500">
-                    모임 참가
-                </button>
-            </div>
+                </CardContent>
+            </Card>
+            <Card className="col-span-1 lg:col-span-1 lg:row-span-2">
+                <CardHeader>
+                    <CardTitle>
+                        지도
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+
+                </CardContent>
+            </Card>
         </div>
     );
 };
