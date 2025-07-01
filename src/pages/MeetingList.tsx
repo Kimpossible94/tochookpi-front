@@ -199,7 +199,7 @@ const MeetingListPage: React.FC = () => {
                                 <Dialog>
                                     <DialogTrigger>
                                         <div
-                                            className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition p-2 bg-gray-50"
+                                            className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition bg-gray-50"
                                         >
                                             <img
                                                 src={meeting.image || defaultImage}
@@ -233,16 +233,13 @@ const MeetingListPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-full max-h-full sm:max-h-[80%] w-full h-full z-[999]">
+                                    <DialogContent className="max-w-full max-h-full w-full h-full sm:max-h-[90%] sm:h-[90%] min-h-0 p-0">
                                         <MeetingDetail meetingId={meeting.id} />
                                     </DialogContent>
                                 </Dialog>
                                 <div className="mt-3 text-sm flex justify-between font-semibold">
                                     <p className="truncate text-base content-center">
                                         {meeting.title}
-                                    </p>
-                                    <p className="text-gray-500 mt-1">
-                                        {meeting.period?.startDate}
                                     </p>
                                     <p className="text-gray-600 mt-1 flex items-center">
                                         <Users className="w-4 h-4 mr-2" />

@@ -19,6 +19,8 @@ export interface MeetingLocation {
 export interface MeetingReview {
     images: string[];
     comments: string;
+    writer: UserInfo;
+    createdAt?: string;
 }
 
 export type MeetingStatus = "BEFORE" | "ONGOING" | "ENDED";
@@ -54,8 +56,11 @@ export interface Meeting {
     currentParticipantsCnt: number;
     maxParticipantsCnt: number;
     participants: UserInfo[];
-    period: { startDate: string; endDate: string };
+    startDate: string;
+    endDate: string;
     schedules?: MeetingSchedule[];
     status: MeetingStatus;
     review?: MeetingReview[];
+    participating?: boolean;
+    createdAt?: string;
 }
