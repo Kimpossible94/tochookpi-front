@@ -4,10 +4,10 @@ import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {Spinner} from "@/components/ui/spinner";
 import api from "@/services/api";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Calendar, Crown, Frown, MapPin, UserRound} from "lucide-react";
+import {Calendar, Crown, Frown, Map, MapPin, UserRound} from "lucide-react";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import {Button} from "@/components/ui/button";
-import {DialogContent, DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -285,6 +285,8 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                                 </p>
                                 <p className="flex gap-1 items-center">
                                     <MapPin className="w-4 h-4"/>
+                                    <span>{meeting.location?.title.replace(/<[^>]*>?/gm, "")}</span>
+                                    <Map className="w-4 h-4 ml-1"/>
                                     <span>{meeting.location?.address}</span>
                                 </p>
                                 <p className="flex gap-1 items-center">
@@ -333,8 +335,6 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                     <div className="col-span-1 lg:col-span-4 flex flex-col gap-4">
                         <p className="text-lg font-bold">상세내용</p>
                         <p className={`text-sm whitespace-pre-line ${expand ? "" : "line-clamp-4"}`}>
-                            {meeting.description}
-                            {meeting.description}
                             {meeting.description}
                         </p>
                         <Button onClick={() => setExpand(!expand)}

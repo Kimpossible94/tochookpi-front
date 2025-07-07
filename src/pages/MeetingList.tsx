@@ -5,13 +5,13 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
-import {ChevronDown, Filter, Search, Users, X} from "lucide-react";
+import {Calendar, ChevronDown, Filter, MapPin, Search, Users, X} from "lucide-react";
 import defaultImage from "../assets/undraw_conversation_15p8.svg";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
-import {useSearchParams} from "react-router-dom";
+import {Link, useSearchParams} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 
@@ -117,7 +117,7 @@ const MeetingListPage: React.FC = () => {
                     >
                         {MEETING_CATEGORY_LABELS[c as keyof typeof MEETING_CATEGORY_LABELS]}
                         <button type="button" onClick={() => handleCategoryDelete(c)}>
-                            <X className="w-3 h-3 ml-1 hover:text-red-500" />
+                            <X className="w-3 h-3 ml-1 hover:text-red-500"/>
                         </button>
                     </Badge>
                 ))}
@@ -130,7 +130,7 @@ const MeetingListPage: React.FC = () => {
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="outline" className="flex items-center gap-2">
-                            카테고리 <ChevronDown size={16} />
+                            카테고리 <ChevronDown size={16}/>
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-36 max-h-36 overflow-y-auto">
@@ -160,14 +160,14 @@ const MeetingListPage: React.FC = () => {
                         type="submit"
                         className="absolute right-1 top-1/2 -translate-y-1/2 pr-2 py-1 text-sm hover:text-gray-400 focus:outline-none"
                     >
-                        <Search />
+                        <Search/>
                     </button>
                 </div>
 
                 <Popover open={sortPopoverOpen} onOpenChange={setSortPopoverOpen}>
                     <PopoverTrigger asChild onClick={() => setSortPopoverOpen(true)}>
                         <Button variant="outline" className="flex items-center gap-2">
-                            <Filter size={16} /> {form.getValues("sortOption")}
+                            <Filter size={16}/> {form.getValues("sortOption")}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-40">
@@ -193,64 +193,104 @@ const MeetingListPage: React.FC = () => {
                 ) : meetings.length === 0 ? (
                     <p className="text-center text-gray-400">모임이 없습니다.</p>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         {meetings.map((meeting) => (
-                            <div key={meeting.id} className="flex flex-col">
+                            <div key={meeting.id} className="flex flex-col gap-2">
                                 <Dialog>
-                                    <DialogTrigger>
+                                    <DialogTrigger asChild>
                                         <div
-                                            className="relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition bg-gray-50"
-                                        >
-                                            <img
-                                                src={meeting.image || defaultImage}
-                                                alt=""
-                                                className="w-full h-48 object-contain object-center"
-                                            />
-
-                                            <div className="absolute left-3 top-2 flex items-center gap-1">
-                                        <span
-                                            className={`w-2.5 h-2.5 rounded-full
-                                            ${meeting.status === "ONGOING" ? "bg-green-500"
-                                                : meeting.status === "ENDED" ? "bg-gray-400" : "bg-blue-400"
-                                            }`}
-                                        />
-                                                <span className="text-xs font-medium text-gray-700">
-                                            {meeting.status === "ONGOING" ? "진행중"
-                                                : meeting.status === "ENDED"? "종료됨" : "예정"}
-                                        </span>
+                                            className="relative flex rounded-2xl shadow hover:shadow-lg hover:border
+                                                        transition overflow-hidden">
+                                            <div className="w-40 aspect-square overflow-hidden flex items-center justify-center">
+                                                <img
+                                                    src={meeting.image || defaultImage}
+                                                    alt=""
+                                                    className="w-3/4 h-3/4 object-contain rounded-full"
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = defaultImage;
+                                                    }}
+                                                />
                                             </div>
 
-                                            <div className='flex text-sm font-semibold absolute right-3 top-2'>
-                                                <Avatar className="w-5 h-5">
-                                                    <AvatarImage
-                                                        src={
-                                                            meeting.organizer?.profileImage ||
-                                                            "https://github.com/shadcn.png"
-                                                        }
-                                                    />
-                                                </Avatar>
-                                                <span className="ml-1">{meeting.organizer?.username}</span>
+                                            <div className="flex flex-col p-3 justify-center flex-1 pr-5">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex items-center gap-2">
+                                                        <span
+                                                            className={`w-2.5 h-2.5 rounded-full ${
+                                                                meeting.status === "ONGOING"
+                                                                    ? "bg-green-500"
+                                                                    : meeting.status === "ENDED"
+                                                                        ? "bg-gray-400"
+                                                                        : "bg-blue-400"
+                                                            }`}
+                                                        />
+                                                        <span className="text-xs">
+                                                            {meeting.status === "ONGOING"
+                                                                ? "진행중"
+                                                                : meeting.status === "ENDED"
+                                                                    ? "종료됨"
+                                                                    : "진행 예정"}
+                                                          </span>
+                                                        <span className="text-xs text-gray-400">•</span>
+                                                        <span className="text-xs">
+                                                            {MEETING_CATEGORY_LABELS[meeting.category]}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center text-xs font-semibold">
+                                                        <Avatar className="w-5 h-5">
+                                                            <AvatarImage
+                                                                src={
+                                                                    meeting.organizer?.profileImage ||
+                                                                    "https://github.com/shadcn.png"
+                                                                }
+                                                            />
+                                                        </Avatar>
+                                                        <span className="ml-1">{meeting.organizer?.username}</span>
+                                                    </div>
+                                                </div>
+
+                                                <p className="text-xl font-bold mt-1 line-clamp-2 break-all">
+                                                    {meeting.title}
+                                                </p>
+
+                                                <div className="text-xs text-gray-500 mt-2 flex gap-3">
+                                                    <span className="flex gap-1">
+                                                        <Calendar className="w-4 h-4" />
+                                                        {meeting.startDate} ~ {meeting.endDate}
+                                                    </span>
+                                                    {meeting.location && (
+                                                        <span className="flex gap-1">
+                                                            <MapPin className="w-4 h-4"/>
+                                                            {meeting.location.title.replace(/<[^>]*>?/gm, "")}
+                                                        </span>
+                                                    )}
+                                                    <span className="flex gap-1">
+                                                        <Users className="w-4 h-4" />
+                                                        {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-full max-h-full w-full h-full sm:max-h-[90%] sm:h-[90%] min-h-0 p-0">
-                                        <MeetingDetail meetingId={meeting.id} />
+                                    <DialogContent
+                                        className="max-w-full max-h-full w-full h-full sm:max-h-[90%] sm:h-[90%] min-h-0 p-0">
+                                        <MeetingDetail meetingId={meeting.id}/>
                                     </DialogContent>
                                 </Dialog>
-                                <div className="mt-3 text-sm flex justify-between font-semibold">
-                                    <p className="truncate text-base content-center">
-                                        {meeting.title}
-                                    </p>
-                                    <p className="text-gray-600 mt-1 flex items-center">
-                                        <Users className="w-4 h-4 mr-2" />
-                                        <span>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</span>
-                                    </p>
-                                </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            <Link to="/create-meeting" className="fixed right-20 bottom-10">
+                <button
+                    className="py-2 px-4 text-md text-white bg-pink-400 hover:bg-pink-300 rounded-3xl
+                                hover:opacity-80 focus:outline-none shadow-xl"
+                >
+                    모임 만들기
+                </button>
+            </Link>
         </div>
     );
 };
