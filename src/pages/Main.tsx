@@ -3,7 +3,7 @@ import {Link, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Form, FormControl, FormField, FormItem, FormMessage} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {Search} from "lucide-react";
@@ -12,7 +12,7 @@ const FormSchema = z.object({
     searchTerm: z.string().optional(),
 })
 
-const Main = () => {
+const Main: React.FC = () => {
     const navigate = useNavigate();
 
     const form = useForm<z.infer<typeof FormSchema>>({

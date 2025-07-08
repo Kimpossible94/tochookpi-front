@@ -34,7 +34,7 @@ const components: { title: string; href: string; description: string }[] = [
     },
     {
         title: "나의 모임",
-        href: "/docs/primitives/hover-card",
+        href: "/my-meeting",
         description: "내가 만든 모임을 관리해요.",
     },
 ];

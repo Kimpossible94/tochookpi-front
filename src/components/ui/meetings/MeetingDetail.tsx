@@ -355,20 +355,20 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                                 <div className="flex text-sm col-span-1">
                                     <Avatar className="w-6 h-6">
                                         <AvatarImage
-                                            src={meeting.organizer.profileImage || "https://github.com/shadcn.png"}/>
+                                            src={meeting.organizer?.profileImage || "https://github.com/shadcn.png"}/>
                                     </Avatar>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div className="flex">
                                                     <span className="ml-1 content-center truncate cursor-default">
-                                                        {meeting.organizer.username}
+                                                        {meeting.organizer?.username}
                                                     </span>
                                                     <Crown className="w-4 h-4 ml-1 self-center text-yellow-500"/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent side="top">
-                                                {meeting.organizer.username}
+                                                {meeting.organizer?.username}
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>

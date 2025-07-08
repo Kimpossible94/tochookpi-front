@@ -2,9 +2,9 @@ import React from "react";
 
 interface SidebarMenuProps {
     selectedMenu: string;
-    selectedSubMenu: string;
+    selectedSubMenu?: string;
     setSelectedMenu: (menu: string) => void;
-    setSelectedSubMenu: (subMenu: string) => void;
+    setSelectedSubMenu?: (subMenu: string) => void;
     menuItems: { name: string; value: string; subMenu?: { name: string; value: string }[] }[];
     bottomItems?: { name: string; value: string }[];
 }
@@ -26,7 +26,7 @@ const SidebarMenu = ({
                             onClick={() => {
                                 setSelectedMenu(item.value);
                                 // 서브 메뉴가 있을 경우 첫 번째 서브 메뉴를 선택
-                                if (item.subMenu && item.subMenu.length > 0) {
+                                if (item.subMenu && item.subMenu.length > 0 && setSelectedSubMenu) {
                                     setSelectedSubMenu(item.subMenu[0].value);
                                 }
                             }}
@@ -42,7 +42,7 @@ const SidebarMenu = ({
                                 {item.subMenu.map((subItem) => (
                                     <li
                                         key={subItem.value}
-                                        onClick={() => setSelectedSubMenu(subItem.value)}
+                                        onClick={() => setSelectedSubMenu?.(subItem.value)}
                                         className={`cursor-pointer ${
                                             selectedSubMenu === subItem.value ? "text-blue-500" : ""
                                         }`}
@@ -54,8 +54,8 @@ const SidebarMenu = ({
                         )}
                     </li>
                 ))}
-                <hr />
                 {/* 하단 항목들 */}
+                {bottomItems && <hr />}
                 {bottomItems && bottomItems.map((item) => (
                     <li
                         key={item.value}

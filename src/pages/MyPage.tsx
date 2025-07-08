@@ -45,7 +45,7 @@ const MyPage = () => {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen pt-20 px-32">
+        <div className="flex flex-col min-h-screen px-32">
             <div className="px-10 pt-10">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center space-x-4">

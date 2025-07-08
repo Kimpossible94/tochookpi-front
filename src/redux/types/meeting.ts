@@ -50,7 +50,7 @@ export interface Meeting {
     title: string;
     category: MeetingCategory;
     description?: string;
-    organizer: UserInfo;
+    organizer?: UserInfo;
     location?: MeetingLocation;
     image?: string;
     currentParticipantsCnt: number;

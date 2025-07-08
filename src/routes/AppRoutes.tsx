@@ -8,6 +8,7 @@ import CreateMeeting from "@/pages/CreateMeeting";
 import MeetingList from "@/pages/MeetingList";
 import React from "react";
 import PublicRoute from "@/components/common/PublicRoute";
+import MyMeeting from "@/pages/MyMeeting";
 
 const AppRoutes = () => (
     <Routes>
@@ -21,6 +22,7 @@ const AppRoutes = () => (
             <Route path="/my" element={<MyPage />} />
             <Route path="/create-meeting" element={<CreateMeeting />} />
             <Route path="/meeting-list" element={<MeetingList />} />
+            <Route path="/my-meeting" element={<MyMeeting />} />
         </Route>
     </Routes>
 );
