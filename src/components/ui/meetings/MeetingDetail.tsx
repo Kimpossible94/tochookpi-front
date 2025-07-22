@@ -10,6 +10,7 @@ import {Button} from "@/components/ui/button";
 import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
+import {AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogTrigger, AlertDialogFooter, AlertDialogCancel, AlertDialogAction} from "@/components/ui/alert-dialog";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -317,14 +318,29 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
 
                         <div className="flex gap-2">
                             {meeting.organizer?.email === user?.email && (
-                                <Button
-                                    onClick={handleDeleteMeeting}
-                                    className="self-center text-white bg-red-500 hover:bg-red-400 hover:text-white"
-                                    disabled={btnLoading}
-                                    variant='outline'
-                                >
-                                    {btnLoading ? <Spinner size="small" /> : "삭제"}
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger>
+                                        <Button
+                                            className="self-center text-white bg-red-500 hover:bg-red-400 hover:text-white"
+                                            disabled={btnLoading}
+                                            variant='outline'
+                                        >
+                                            {btnLoading ? <Spinner size="small" /> : "삭제"}
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>모임을 삭제하시겠습니까?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                삭제된 모임은 다시 복구할 수 없습니다.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>취소</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDeleteMeeting}>삭제</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             )}
                             {meeting.participating ? (
                                 <Button
