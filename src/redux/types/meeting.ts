@@ -45,6 +45,18 @@ export const MEETING_CATEGORY_LABELS: Record<MeetingCategory, string> = {
     ETC: "기타",
 };
 
+export const MEETING_SORT_OPTIONS = [
+    "LATEST",
+    "POPULAR",
+] as const;
+
+export type MeetingSortOption = (typeof MEETING_SORT_OPTIONS)[number];
+
+export const MEETING_SORT_OPTION_LABELS: Record<MeetingSortOption, string> = {
+    LATEST: "최신순",
+    POPULAR: "인기순",
+};
+
 export interface Meeting {
     id: number;
     title: string;

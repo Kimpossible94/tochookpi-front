@@ -25,15 +25,16 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
     const { user } = useSelector((state: RootState) => state.user);
     const mapRef = useRef<naver.maps.Map | null>(null);
 
-
     useEffect(() => {
         fetchMeetingDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         if (meeting?.location) {
             initLocation(meeting.location);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [meeting]);
 
     const fetchMeetingDetails = async () => {

@@ -47,7 +47,7 @@ export default function SignupPage() {
         },
     })
 
-    const { handleSubmit, control, formState: { errors } } = form;
+    const { handleSubmit, formState: { errors } } = form;
 
     const sendVerificationCode = async () => {
         const phone = form.getValues("phone");

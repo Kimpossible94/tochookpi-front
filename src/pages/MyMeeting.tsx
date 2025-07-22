@@ -82,6 +82,7 @@ export default function MyMeeting() {
     useEffect(() => {
         form.reset();
         fetchMeetings(form.getValues(), selectedMenu);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedMenu]);
 
     const onSubmit = (data: FilterFormType) => {

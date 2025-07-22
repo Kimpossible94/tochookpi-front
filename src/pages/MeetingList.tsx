@@ -8,22 +8,25 @@ import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover"
 import {Calendar, ChevronDown, Filter, MapPin, Search, Users, X} from "lucide-react";
 import defaultImage from "../assets/undraw_conversation_15p8.svg";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
-import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
+import {
+    Meeting,
+    MEETING_CATEGORIES,
+    MEETING_CATEGORY_LABELS,
+    MEETING_SORT_OPTION_LABELS,
+    MEETING_SORT_OPTIONS,
+    MeetingCategory,
+    MeetingSortOption
+} from "@/redux/types/meeting";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
 import {Link, useSearchParams} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
+import {meetingFilterSchema} from "@/lib/schemas/meeting";
 
-const FilterSchema = z.object({
-    searchTerm: z.string().optional(),
-    category: z.array(z.string()).optional(),
-    sortOption: z.enum(["최신순", "인기순"]).optional(),
-});
+const FilterSchema = meetingFilterSchema;
 
 type FilterFormType = z.infer<typeof FilterSchema>;
-
-const sortOptions = ["최신순", "인기순"];
 
 const MeetingListPage: React.FC = () => {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -36,7 +39,7 @@ const MeetingListPage: React.FC = () => {
         defaultValues: {
             searchTerm: searchParams.get("searchTerm") ?? "",
             category: [],
-            sortOption: "최신순",
+            sortOption: "LATEST",
         },
     });
 
@@ -48,15 +51,9 @@ const MeetingListPage: React.FC = () => {
                 const params = new URLSearchParams();
                 if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
                 if (filters.category && filters.category.length > 0) {
-                    filters.category.forEach((cat) => params.append("category", cat));
+                    filters.category.forEach((cat: MeetingCategory) => params.append("category", cat));
                 }
-                if (filters.sortOption) {
-                    const sortMap: Record<string, string> = {
-                        최신순: "latest",
-                        인기순: "popular",
-                    };
-                    params.append("sort", sortMap[filters.sortOption]);
-                }
+                if (filters.sortOption) params.append("sort", filters.sortOption);
                 query = "?" + params.toString();
             }
 
@@ -71,13 +68,14 @@ const MeetingListPage: React.FC = () => {
 
     useEffect(() => {
         fetchMeetings(form.getValues());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const onSubmit = (data: FilterFormType) => {
         fetchMeetings(data);
     };
 
-    const handleCategorySelect = (category: string) => {
+    const handleCategorySelect = (category: MeetingCategory) => {
         const current = form.getValues("category") || [];
         const isAlreadySelected = current.includes(category);
 
@@ -88,13 +86,13 @@ const MeetingListPage: React.FC = () => {
         form.setValue("category", newCategories);
     };
 
-    const handleCategoryDelete = (category: string) => {
-        const current = form.getValues("category") || [];
-        const newCategories = current.filter((cat) => cat !== category);
+    const handleCategoryDelete = (category: MeetingCategory) => {
+        const current: MeetingCategory[] = form.getValues("category") || [];
+        const newCategories = current.filter((cat: MeetingCategory) => cat !== category);
         form.setValue("category", newCategories);
     };
 
-    const handleSortChange = (sort: FilterFormType["sortOption"]) => {
+    const handleSortChange = (sort: MeetingSortOption) => {
         form.setValue("sortOption", sort);
         setSortPopoverOpen(false);
     };
@@ -109,13 +107,13 @@ const MeetingListPage: React.FC = () => {
             )}
 
             <div className="flex gap-2 mb-4">
-                {form.watch("category")?.map((c) => (
+                {form.watch("category")?.map((c: MeetingCategory) => (
                     <Badge
                         key={c}
                         variant="secondary"
                         className="flex items-center gap-1 px-3 py-1 rounded-full"
                     >
-                        {MEETING_CATEGORY_LABELS[c as keyof typeof MEETING_CATEGORY_LABELS]}
+                        {MEETING_CATEGORY_LABELS[c]}
                         <button type="button" onClick={() => handleCategoryDelete(c)}>
                             <X className="w-3 h-3 ml-1 hover:text-red-500"/>
                         </button>
@@ -135,14 +133,14 @@ const MeetingListPage: React.FC = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-36 max-h-36 overflow-y-auto">
                         <div className="flex flex-col space-y-2">
-                            {MEETING_CATEGORIES.map((cat) => (
+                            {MEETING_CATEGORIES.map((c: MeetingCategory) => (
                                 <Button
-                                    key={cat}
+                                    key={c}
                                     variant="ghost"
                                     className="justify-start"
-                                    onClick={() => handleCategorySelect(cat)}
+                                    onClick={() => handleCategorySelect(c)}
                                 >
-                                    {MEETING_CATEGORY_LABELS[cat]}
+                                    {MEETING_CATEGORY_LABELS[c]}
                                 </Button>
                             ))}
                         </div>
@@ -167,19 +165,19 @@ const MeetingListPage: React.FC = () => {
                 <Popover open={sortPopoverOpen} onOpenChange={setSortPopoverOpen}>
                     <PopoverTrigger asChild onClick={() => setSortPopoverOpen(true)}>
                         <Button variant="outline" className="flex items-center gap-2">
-                            <Filter size={16}/> {form.getValues("sortOption")}
+                            <Filter size={16}/> {MEETING_SORT_OPTION_LABELS[form.getValues("sortOption") ?? "LATEST"]}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-40">
                         <div className="flex flex-col space-y-2">
-                            {sortOptions.map((option) => (
+                            {MEETING_SORT_OPTIONS.map((option: MeetingSortOption) => (
                                 <Button
                                     key={option}
                                     variant="ghost"
                                     className="justify-start"
-                                    onClick={() => handleSortChange(option as "최신순" | "인기순")}
+                                    onClick={() => handleSortChange(option)}
                                 >
-                                    {option}
+                                    {MEETING_SORT_OPTION_LABELS[option]}
                                 </Button>
                             ))}
                         </div>
