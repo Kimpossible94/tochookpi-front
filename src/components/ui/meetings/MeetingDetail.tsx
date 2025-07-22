@@ -4,13 +4,36 @@ import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {Spinner} from "@/components/ui/spinner";
 import api from "@/services/api";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Calendar, Crown, Frown, Map, MapPin, UserRound} from "lucide-react";
+import {
+    ArrowLeftFromLine,
+    ArrowRightToLine,
+    Calendar,
+    Crown,
+    Frown,
+    Map,
+    MapPin,
+    PencilLine,
+    Trash,
+    UserRound
+} from "lucide-react";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import {Button} from "@/components/ui/button";
 import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
-import {AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogTrigger, AlertDialogFooter, AlertDialogCancel, AlertDialogAction} from "@/components/ui/alert-dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import {Tabs, TabsContent} from "@/components/ui/tabs";
+import ModifyMeeting from "@/pages/ModifyMeeting";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -21,6 +44,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [expand, setExpand] = useState<boolean>(false);
+    const [tab, setTab] = useState<string>("detail");
     const [btnLoading, setBtnLoading] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
     const mapRef = useRef<naver.maps.Map | null>(null);
@@ -293,210 +317,249 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
 
     return (
         <div className="flex flex-col h-full min-h-0">
-            <DialogHeader className="shrink-0 py-5 border-b">
-                <DialogTitle className="flex flex-col sm:px-44">
-                    <p className="text-sm text-green-500">{MEETING_CATEGORY_LABELS[meeting.category]}</p>
-                    <div className="flex justify-between">
-                        <div className="flex flex-col">
-                            <p className="text-3xl font-bold mt-2">{meeting.title}</p>
-                            <div className="text-sm flex mt-2 text-gray-600 gap-3">
-                                <p className="flex gap-1 items-center">
-                                    <UserRound className="w-4 h-4"/>
-                                    <span>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</span>
-                                </p>
-                                <p className="flex gap-1 items-center">
-                                    <MapPin className="w-4 h-4"/>
-                                    <span>{meeting.location?.title.replace(/<[^>]*>?/gm, "")}</span>
-                                    <Map className="w-4 h-4 ml-1"/>
-                                    <span>{meeting.location?.address}</span>
-                                </p>
-                                <p className="flex gap-1 items-center">
-                                    <Calendar className="w-4 h-4"/>
-                                    <span>{meeting.startDate} ~ {meeting.endDate}</span>
-                                </p>
-                            </div>
-                        </div>
+            <Tabs value={tab} className="w-full">
+                <TabsContent value="detail">
+                    <DialogHeader className="shrink-0 py-5 border-b">
+                        <DialogTitle className="flex flex-col sm:px-44">
+                            <p className="text-sm text-green-500">{MEETING_CATEGORY_LABELS[meeting.category]}</p>
+                            <div className="flex justify-between">
+                                <div className="flex flex-col">
+                                    <p className="text-3xl font-bold mt-2">{meeting.title}</p>
+                                    <div className="text-sm flex mt-2 text-gray-600 gap-3">
+                                        <p className="flex gap-1 items-center">
+                                            <UserRound className="w-4 h-4"/>
+                                            <span>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</span>
+                                        </p>
+                                        <p className="flex gap-1 items-center">
+                                            <MapPin className="w-4 h-4"/>
+                                            <span>{meeting.location?.title.replace(/<[^>]*>?/gm, "")}</span>
+                                            <Map className="w-4 h-4 ml-1"/>
+                                            <span>{meeting.location?.address}</span>
+                                        </p>
+                                        <p className="flex gap-1 items-center">
+                                            <Calendar className="w-4 h-4"/>
+                                            <span>{meeting.startDate} ~ {meeting.endDate}</span>
+                                        </p>
+                                    </div>
+                                </div>
 
-                        <div className="flex gap-2">
-                            {meeting.organizer?.email === user?.email && (
-                                <AlertDialog>
-                                    <AlertDialogTrigger>
+                                <div className="flex gap-2">
+                                    {meeting.organizer?.email === user?.email && (
+                                        <div className="flex gap-2">
+                                            <AlertDialog>
+                                                <AlertDialogTrigger>
+                                                    <Button
+                                                        className="self-center text-white bg-red-500 hover:bg-red-400 hover:text-white"
+                                                        disabled={btnLoading}
+                                                        variant='outline'
+                                                    >
+                                                        {btnLoading ? <Spinner size="small" />
+                                                            : <div className="flex">
+                                                                <Trash className="w-2 h-2 self-center mr-1" /> 삭제
+                                                            </div>}
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>모임을 삭제하시겠습니까?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            삭제된 모임은 다시 복구할 수 없습니다.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>취소</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleDeleteMeeting}>삭제</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+
+                                            <Button
+                                                onClick={() => setTab('edit')}
+                                                className="self-center"
+                                            >
+                                                {btnLoading ? <Spinner size="small" />
+                                                    : <div className="flex">
+                                                        <PencilLine className="w-2 h-2 self-center mr-1" /> 수정
+                                                    </div>}
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {meeting.participating ? (
                                         <Button
-                                            className="self-center text-white bg-red-500 hover:bg-red-400 hover:text-white"
+                                            onClick={handleLeaveMeeting}
+                                            className="self-center"
                                             disabled={btnLoading}
                                             variant='outline'
                                         >
-                                            {btnLoading ? <Spinner size="small" /> : "삭제"}
+                                            {btnLoading ? <Spinner size="small" />
+                                                : <div className="flex">
+                                                    <ArrowLeftFromLine className="w-2 h-2 self-center mr-1" /> 나가기
+                                                </div>}
                                         </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>모임을 삭제하시겠습니까?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                삭제된 모임은 다시 복구할 수 없습니다.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>취소</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleDeleteMeeting}>삭제</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            )}
-                            {meeting.participating ? (
-                                <Button
-                                    onClick={handleLeaveMeeting}
-                                    className="self-center text-red-500 border-red-500 hover:text-red-500"
-                                    disabled={btnLoading}
-                                    variant='outline'
-                                >
-                                    {btnLoading ? <Spinner size="small" /> : "나가기"}
-                                </Button>
-                            ) : (
-                                <Button
-                                    onClick={handleJoinMeeting}
-                                    className="self-center"
-                                    disabled={btnLoading}
-                                >
-                                    {btnLoading ? <Spinner size="small" /> : "참여하기"}
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </DialogTitle>
-                <DialogDescription className="hidden">
-                    이 모임에 대한 자세한 정보를 확인하고 참여할 수 있습니다.
-                </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 h-full min-h-0 overflow-y-scroll sm:px-44 pt-10">
-                    {meeting.image && (
-                        <div className="col-span-1 lg:col-span-6 lg:row-span-1 w-full">
-                            <img
-                                src={meeting.image}
-                                alt=""
-                                className={meeting.image ? 'object-contain h-52 rounded-3xl' : ''}
-                            />
-                        </div>
-                    )}
-
-                    <div className="col-span-1 lg:col-span-4 flex flex-col gap-4">
-                        <p className="text-lg font-bold">상세내용</p>
-                        <p className={`text-sm whitespace-pre-line ${expand ? "" : "line-clamp-4"}`}>
-                            {meeting.description}
-                        </p>
-                        <Button onClick={() => setExpand(!expand)}
-                                className="text-blue-500 text-xs self-start bg-transparent shadow-none p-0 hover:bg-transparent">
-                            {expand ? "접기" : "더보기"}
-                        </Button>
-                    </div>
-
-                    <Card className="col-span-1 lg:col-span-2 flex flex-col max-h-60">
-                        <CardHeader className="pt-3 px-3 pb-0">
-                            <CardTitle className="flex flex-col">
-                                <p>참가자</p>
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent className="m-3 mt-4 p-0 overflow-y-scroll">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                <div className="flex text-sm col-span-1">
-                                    <Avatar className="w-6 h-6">
-                                        <AvatarImage
-                                            src={meeting.organizer?.profileImage || "https://github.com/shadcn.png"}/>
-                                    </Avatar>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="flex">
-                                                    <span className="ml-1 content-center truncate cursor-default">
-                                                        {meeting.organizer?.username}
-                                                    </span>
-                                                    <Crown className="w-4 h-4 ml-1 self-center text-yellow-500"/>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top">
-                                                {meeting.organizer?.username}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                    ) : (
+                                        <Button
+                                            onClick={handleJoinMeeting}
+                                            className="self-center"
+                                            disabled={btnLoading}
+                                            variant="outline"
+                                        >
+                                            {btnLoading ? <Spinner size="small" />
+                                                : <div className="flex">
+                                                    <ArrowRightToLine className="w-2 h-2 self-center mr-1" /> 참여하기
+                                                </div>}
+                                        </Button>
+                                    )}
                                 </div>
-
-                                {meeting.participants?.map((user, idx) => (
-                                    <div key={idx} className="flex text-sm">
-                                        <Avatar className="w-6 h-6">
-                                            <AvatarImage src={user.profileImage || "https://github.com/shadcn.png"}/>
-                                        </Avatar>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <span className="ml-1 content-center truncate cursor-default">
-                                                        {user.username}
-                                                    </span>
-                                                </TooltipTrigger>
-                                                <TooltipContent side="top">
-                                                    {user.username}
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                ))}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </DialogTitle>
+                        <DialogDescription className="hidden">
+                            이 모임에 대한 자세한 정보를 확인하고 참여할 수 있습니다.
+                        </DialogDescription>
+                    </DialogHeader>
 
-                    <div className="col-span-1 lg:col-span-6 flex flex-col mt-10">
-                        <p className="text-md font-semibold my-2">어디서 모이나요 ?</p>
-                        <div id="map" className="w-full h-72 rounded-3xl"/>
-                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 h-full min-h-0 overflow-y-scroll sm:px-44 pt-10">
+                            {meeting.image && (
+                                <div className="col-span-1 lg:col-span-6 lg:row-span-1 w-full">
+                                    <img
+                                        src={meeting.image}
+                                        alt=""
+                                        className={meeting.image ? 'object-contain h-52 rounded-3xl' : ''}
+                                    />
+                                </div>
+                            )}
 
-                    <div className="col-span-1 lg:col-span-6 flex flex-col mt-10 min-h-72">
-                        <p className="text-md font-semibold my-2">모임 후기</p>
+                            <div className="col-span-1 lg:col-span-4 flex flex-col gap-4">
+                                <p className="text-lg font-bold">상세내용</p>
+                                <p className={`text-sm whitespace-pre-line ${expand ? "" : "line-clamp-4"}`}>
+                                    {meeting.description}
+                                </p>
+                                <Button onClick={() => setExpand(!expand)}
+                                        className="text-blue-500 text-xs self-start bg-transparent shadow-none p-0 hover:bg-transparent">
+                                    {expand ? "접기" : "더보기"}
+                                </Button>
+                            </div>
 
-                        {meeting.review && meeting.review.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                                {meeting.review.map((review, index) => (
-                                    <Card key={index} className="p-4 space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="w-7 h-7">
+                            <Card className="col-span-1 lg:col-span-2 flex flex-col max-h-60">
+                                <CardHeader className="pt-3 px-3 pb-0">
+                                    <CardTitle className="flex flex-col">
+                                        <p>참가자</p>
+                                    </CardTitle>
+                                </CardHeader>
+
+                                <CardContent className="m-3 mt-4 p-0 overflow-y-scroll">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                        <div className="flex text-sm col-span-1">
+                                            <Avatar className="w-6 h-6">
                                                 <AvatarImage
-                                                    src={review.writer.profileImage || "https://github.com/shadcn.png"}/>
+                                                    src={meeting.organizer?.profileImage || "https://github.com/shadcn.png"}/>
                                             </Avatar>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium">{review.writer.username}</span>
-                                                {review.createdAt && (
-                                                    <span
-                                                        className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
-                                                )}
-                                            </div>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="flex">
+                                                            <span className="ml-1 content-center truncate cursor-default">
+                                                                {meeting.organizer?.username}
+                                                            </span>
+                                                            <Crown className="w-4 h-4 ml-1 self-center text-yellow-500"/>
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top">
+                                                        {meeting.organizer?.username}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </div>
 
-                                        <p className="text-sm text-gray-800 whitespace-pre-line">{review.comments}</p>
-
-                                        {review.images.length > 0 && (
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {review.images.map((imgUrl, imgIdx) => (
-                                                    <img
-                                                        key={imgIdx}
-                                                        src={imgUrl}
-                                                        alt={`후기 이미지 ${imgIdx + 1}`}
-                                                        className="w-full h-32 object-cover rounded-md"
-                                                    />
-                                                ))}
+                                        {meeting.participants?.map((user, idx) => (
+                                            <div key={idx} className="flex text-sm">
+                                                <Avatar className="w-6 h-6">
+                                                    <AvatarImage src={user.profileImage || "https://github.com/shadcn.png"}/>
+                                                </Avatar>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <span className="ml-1 content-center truncate cursor-default">
+                                                                {user.username}
+                                                            </span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top">
+                                                            {user.username}
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
-                                        )}
-                                    </Card>
-                                ))}
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="col-span-1 lg:col-span-6 flex flex-col mt-10">
+                                <p className="text-md font-semibold my-2">어디서 모이나요 ?</p>
+                                <div id="map" className="w-full h-72 rounded-3xl"/>
                             </div>
-                        ) : (
-                            <div className="flex justify-center items-center min-h-full">
-                                <p className="text-sm text-gray-500 mt-2">아직 등록된 후기가 없습니다.</p>
+
+                            <div className="col-span-1 lg:col-span-6 flex flex-col mt-10 min-h-72">
+                                <p className="text-md font-semibold my-2">모임 후기</p>
+
+                                {meeting.review && meeting.review.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                                        {meeting.review.map((review, index) => (
+                                            <Card key={index} className="p-4 space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="w-7 h-7">
+                                                        <AvatarImage
+                                                            src={review.writer.profileImage || "https://github.com/shadcn.png"}/>
+                                                    </Avatar>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium">{review.writer.username}</span>
+                                                        {review.createdAt && (
+                                                            <span
+                                                                className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <p className="text-sm text-gray-800 whitespace-pre-line">{review.comments}</p>
+
+                                                {review.images.length > 0 && (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {review.images.map((imgUrl, imgIdx) => (
+                                                            <img
+                                                                key={imgIdx}
+                                                                src={imgUrl}
+                                                                alt={`후기 이미지 ${imgIdx + 1}`}
+                                                                className="w-full h-32 object-cover rounded-md"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-center items-center min-h-full">
+                                        <p className="text-sm text-gray-500 mt-2">아직 등록된 후기가 없습니다.</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
-                </div>
-            </div>
+                </TabsContent>
+
+                <TabsContent value="edit">
+                    <Button
+                        onClick={() => setTab('detail')}
+                        className="self-center"
+                    >
+                        {btnLoading ? <Spinner size="small" />
+                            : <div className="flex">
+                                <PencilLine className="w-2 h-2 self-center mr-1" /> 수정
+                            </div>}
+                    </Button>
+                    <ModifyMeeting meeting={meeting} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };
