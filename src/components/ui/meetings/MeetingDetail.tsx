@@ -8,16 +8,20 @@ import {Calendar, Crown, Frown, Map, MapPin, UserRound} from "lucide-react";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import {Button} from "@/components/ui/button";
 import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {useSelector} from "react-redux";
+import {RootState} from "@/redux/store";
 
 interface MeetingDetailProps {
     meetingId: number;
+    onClose?: () => void;
 }
 
-const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
+const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => {
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [expand, setExpand] = useState<boolean>(false);
-    const [joining, setJoining] = useState(false);
+    const [btnLoading, setBtnLoading] = useState(false);
+    const { user } = useSelector((state: RootState) => state.user);
     const mapRef = useRef<naver.maps.Map | null>(null);
 
 
@@ -218,8 +222,8 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
     }
 
     const handleJoinMeeting = async () => {
-        if (!meeting || joining || meeting.participating) return;
-        setJoining(true);
+        if (!meeting || btnLoading || meeting.participating) return;
+        setBtnLoading(true);
 
         try {
             await api.post(`/meetings/${meeting.id}/join`);
@@ -230,13 +234,13 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
             console.error("참여 실패:", error);
             //TODO: 참여 실패(토큰 만료, 이미 삭제된 모임, 종료된 모임 등)의 경우 에러처리 추가 해야함.
         } finally {
-            setJoining(false);
+            setBtnLoading(false);
         }
     };
 
     const handleLeaveMeeting = async () => {
-        if (!meeting || joining || !meeting.participating) return;
-        setJoining(true);
+        if (!meeting || btnLoading || !meeting.participating) return;
+        setBtnLoading(true);
 
         try {
             await api.post(`/meetings/${meeting.id}/leave`);
@@ -247,7 +251,22 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
             console.error("나가기 실패:", error);
             // TODO: 토큰 만료, 모임 종료, 삭제된 모임 등 예외 처리
         } finally {
-            setJoining(false);
+            setBtnLoading(false);
+        }
+    };
+
+    const handleDeleteMeeting = async () => {
+        if (!meeting || btnLoading) return;
+        setBtnLoading(true);
+
+        try {
+            await api.delete(`/meetings/${meeting.id}`);
+            if(onClose) onClose();
+        } catch (error) {
+            console.error("삭제 실패:", error);
+            // TODO: 토큰 만료, 이미 삭제된 모임 등 예외 처리
+        } finally {
+            setBtnLoading(false);
         }
     };
 
@@ -295,24 +314,37 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId }) => {
                                 </p>
                             </div>
                         </div>
-                        {meeting.participating ? (
-                            <Button
-                                onClick={handleLeaveMeeting}
-                                className="self-center text-red-500 border-red-500 hover:text-red-500"
-                                disabled={joining}
-                                variant='outline'
-                            >
-                                {joining ? <Spinner size="small" /> : "나가기"}
-                            </Button>
-                        ) : (
-                            <Button
-                                onClick={handleJoinMeeting}
-                                className="self-center"
-                                disabled={joining}
-                            >
-                                {joining ? <Spinner size="small" /> : "참여하기"}
-                            </Button>
-                        )}
+
+                        <div className="flex gap-2">
+                            {meeting.organizer?.email === user?.email && (
+                                <Button
+                                    onClick={handleDeleteMeeting}
+                                    className="self-center text-white bg-red-500 hover:bg-red-400 hover:text-white"
+                                    disabled={btnLoading}
+                                    variant='outline'
+                                >
+                                    {btnLoading ? <Spinner size="small" /> : "삭제"}
+                                </Button>
+                            )}
+                            {meeting.participating ? (
+                                <Button
+                                    onClick={handleLeaveMeeting}
+                                    className="self-center text-red-500 border-red-500 hover:text-red-500"
+                                    disabled={btnLoading}
+                                    variant='outline'
+                                >
+                                    {btnLoading ? <Spinner size="small" /> : "나가기"}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleJoinMeeting}
+                                    className="self-center"
+                                    disabled={btnLoading}
+                                >
+                                    {btnLoading ? <Spinner size="small" /> : "참여하기"}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </DialogTitle>
                 <DialogDescription className="hidden">

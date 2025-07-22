@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
-import {Calendar, ChevronDown, Filter, MapPin, Search, Users, X} from "lucide-react";
+import {Calendar, ChevronDown, Filter, MapPin, Search, Tags, Users, X} from "lucide-react";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -31,6 +31,7 @@ export default function MyMeeting() {
     const [loading, setLoading] = useState<boolean>(true);
     const [sortPopoverOpen, setSortPopoverOpen] = useState<boolean>(false);
     const [searchParams] = useSearchParams();
+    const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm<FilterFormType>({
         resolver: zodResolver(FilterSchema),
@@ -41,14 +42,14 @@ export default function MyMeeting() {
         },
     });
 
-    const [selectedMenu, setSelectedMenu] = useState("만든 모임");
+    const [selectedMenu, setSelectedMenu] = useState("created");
 
     const menuItems = [
-        { name: "내가 만든 모임", value: "만든 모임" },
-        { name: "내가 참여한 모임", value: "참여한 모임" },
+        { name: "내가 만든 모임", value: "created" },
+        { name: "내가 참여한 모임", value: "joined" },
     ];
 
-    const fetchMeetings = async (filters?: FilterFormType) => {
+    const fetchMeetings = async (filters?: FilterFormType, selectMenu?: string) => {
         try {
             setLoading(true);
             let query = "";
@@ -65,6 +66,7 @@ export default function MyMeeting() {
                     };
                     params.append("sort", sortMap[filters.sortOption]);
                 }
+                if(selectMenu) params.append("type", selectMenu);
                 query = "?" + params.toString();
             }
 
@@ -78,11 +80,12 @@ export default function MyMeeting() {
     };
 
     useEffect(() => {
-        fetchMeetings(form.getValues());
+        form.reset();
+        fetchMeetings(form.getValues(), selectedMenu);
     }, [selectedMenu]);
 
     const onSubmit = (data: FilterFormType) => {
-        fetchMeetings(data);
+        fetchMeetings(data, selectedMenu);
     };
 
     const handleCategorySelect = (category: string) => {
@@ -113,7 +116,10 @@ export default function MyMeeting() {
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center space-x-4">
                         <div>
-                            <h1 className="text-2xl font-semibold">나의 모임 관리 / {selectedMenu}</h1>
+                            <h1 className="text-2xl font-semibold">나의 모임 관리 / {
+                                    menuItems.find((menu) => menu.value === selectedMenu)?.name
+                                }
+                            </h1>
                         </div>
                     </div>
                 </div>
@@ -210,51 +216,54 @@ export default function MyMeeting() {
                         ) : meetings.length === 0 ? (
                             <p className="text-center text-gray-400">모임이 없습니다.</p>
                         ) : (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 xl:grid-cols-4">
                                 {meetings.map((meeting) => (
-                                    <div key={meeting.id} className="flex flex-col gap-2">
-                                        <Dialog>
+                                    <div key={meeting.id} className="flex flex-col gap-1 mt-4">
+                                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
                                             <DialogTrigger asChild>
-                                                <div
-                                                    className="relative flex rounded-2xl shadow hover:shadow-lg hover:border
-                                                        transition overflow-hidden">
-                                                    <div className="w-40 aspect-square overflow-hidden flex items-center justify-center">
+                                                <div className="relative flex-col shadow hover:shadow-lg w-52
+                                                                hover:border transition p-2">
+                                                    <div className="relative aspect-square shadow-md">
                                                         <img
                                                             src={meeting.image || defaultImage}
                                                             alt=""
-                                                            className="w-3/4 h-3/4 object-contain rounded-full"
+                                                            className="h-full"
                                                             onError={(e) => {
                                                                 e.currentTarget.src = defaultImage;
                                                             }}
                                                         />
+
+                                                        <span className={`py-1 px-2 right-1 top-1 rounded-full text-white
+                                                                            absolute text-[9px] font-bold
+                                                                        ${meeting.status === "ONGOING" ? "bg-green-500"
+                                                                        : meeting.status === "ENDED" ? "bg-gray-400"
+                                                                        : "bg-blue-400"}`}>
+                                                            {meeting.status === "ONGOING" ? "진행중"
+                                                                : meeting.status === "ENDED" ? "종료됨" : "진행 예정"}
+                                                        </span>
                                                     </div>
 
-                                                    <div className="flex flex-col p-3 justify-center flex-1 pr-5">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="flex items-center gap-2">
-                                                        <span
-                                                            className={`w-2.5 h-2.5 rounded-full ${
-                                                                meeting.status === "ONGOING"
-                                                                    ? "bg-green-500"
-                                                                    : meeting.status === "ENDED"
-                                                                        ? "bg-gray-400"
-                                                                        : "bg-blue-400"
-                                                            }`}
-                                                        />
-                                                                <span className="text-xs">
-                                                            {meeting.status === "ONGOING"
-                                                                ? "진행중"
-                                                                : meeting.status === "ENDED"
-                                                                    ? "종료됨"
-                                                                    : "진행 예정"}
-                                                          </span>
-                                                                <span className="text-xs text-gray-400">•</span>
-                                                                <span className="text-xs">
-                                                            {MEETING_CATEGORY_LABELS[meeting.category]}
-                                                        </span>
-                                                            </div>
-                                                            <div className="flex items-center text-xs font-semibold">
-                                                                <Avatar className="w-5 h-5">
+                                                    <p className="text-base font-bold mt-3 line-clamp-1 break-all">
+                                                        {meeting.title}
+                                                    </p>
+
+                                                    <span className="flex text-[9px] text-gray-500 mt-1">
+                                                        <Calendar className="w-3 h-3 mr-1" />
+                                                        {meeting.startDate} ~ {meeting.endDate}
+                                                    </span>
+
+                                                    <div className="flex flex-col mt-3 w-full">
+                                                        <div className="flex justify-between text-[10px] items-center">
+                                                            <span className="flex items-center">
+                                                                <Tags className="w-3 h-3 mr-1" />
+                                                                {MEETING_CATEGORY_LABELS[meeting.category]}
+                                                            </span>
+                                                            <span className="flex items-center">
+                                                                <Users className="w-3 h-3 mr-1" />
+                                                                {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}
+                                                            </span>
+                                                            <div className="flex items-center">
+                                                                <Avatar className="w-4 h-4">
                                                                     <AvatarImage
                                                                         src={
                                                                             meeting.organizer?.profileImage ||
@@ -266,32 +275,23 @@ export default function MyMeeting() {
                                                             </div>
                                                         </div>
 
-                                                        <p className="text-xl font-bold mt-1 line-clamp-2 break-all">
-                                                            {meeting.title}
-                                                        </p>
-
-                                                        <div className="text-xs text-gray-500 mt-2 flex gap-3">
-                                                    <span className="flex gap-1">
-                                                        <Calendar className="w-4 h-4" />
-                                                        {meeting.startDate} ~ {meeting.endDate}
-                                                    </span>
-                                                            {meeting.location && (
-                                                                <span className="flex gap-1">
-                                                            <MapPin className="w-4 h-4"/>
+                                                        {meeting.location && (
+                                                            <div className="text-[10px] mt-2">
+                                                                <span className="flex items-center">
+                                                                    <MapPin className="w-3 h-3 mr-1"/>
                                                                     {meeting.location.title.replace(/<[^>]*>?/gm, "")}
-                                                        </span>
-                                                            )}
-                                                            <span className="flex gap-1">
-                                                        <Users className="w-4 h-4" />
-                                                                {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}
-                                                    </span>
-                                                        </div>
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </DialogTrigger>
                                             <DialogContent
                                                 className="max-w-full max-h-full w-full h-full sm:max-h-[90%] sm:h-[90%] min-h-0 p-0">
-                                                <MeetingDetail meetingId={meeting.id}/>
+                                                <MeetingDetail meetingId={meeting.id} onClose={() => {
+                                                    setIsOpen(false);
+                                                    onSubmit(form.getValues());
+                                                }}/>
                                             </DialogContent>
                                         </Dialog>
                                     </div>
