@@ -10,7 +10,7 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {CalendarIcon, MapPin, MapPinX, Plus, Trash2} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
-import {addDays, eachDayOfInterval, format} from "date-fns";
+import {eachDayOfInterval, format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {Slider} from "@/components/ui/slider";
 import api from "@/services/api";
@@ -22,7 +22,7 @@ import {ko} from "date-fns/locale";
 import {Card} from "@/components/ui/card";
 import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
+import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS, MeetingSchedule} from "@/redux/types/meeting";
 import {meetingSchema} from "@/lib/schemas/meeting";
 
 interface ModifyMeetingProps {
@@ -32,12 +32,12 @@ interface ModifyMeetingProps {
 const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     const [activeField, setActiveField] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>("");
-    const [schedules, setSchedules] = useState<{ date: string; events: any[] }[]>([]);
+    const [schedules, setSchedules] = useState<MeetingSchedule[]>(meeting.schedules? meeting.schedules : []);
     const [date, setDate] = useState<DateRange | undefined>({
-        from: new Date(),
-        to: addDays(new Date(), 7),
+        from: new Date(meeting.startDate),
+        to: new Date(meeting.endDate),
     });
-    const [map, setMap] = useState<naver.maps.Map | undefined>(undefined);
+    const mapRef = useRef<naver.maps.Map | undefined>(undefined);
     const mapMarkerList = useRef<naver.maps.Marker[]>([]);
     const infoWindowList = useRef<naver.maps.InfoWindow[]>([]);
     const selectedScheduleIndex = schedules.findIndex(s => s.date === selectedDate);
@@ -45,15 +45,15 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     const form = useForm<z.infer<typeof meetingSchema>>({
         resolver: zodResolver(meetingSchema),
         defaultValues: {
-            title: "",
-            description: "",
-            category: "",
-            location: undefined,
+            title: meeting.title,
+            description: meeting.description,
+            category: meeting.category,
+            location: meeting.location,
             image: undefined,
-            maxParticipantsCnt: 5,
-            startDate: date?.from?.toISOString(),
-            endDate: date?.to?.toISOString(),
-            schedules: [],
+            maxParticipantsCnt: meeting.maxParticipantsCnt,
+            startDate: meeting.startDate,
+            endDate: meeting.endDate,
+            schedules: meeting.schedules,
         },
     });
 
@@ -68,12 +68,14 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     const { setValue } = form;
 
     useEffect(() => {
-        if (activeField === "location" && typeof window !== "undefined" && window.naver && !map) {
-            const mapContainer = document.getElementById("map");
+        if (activeField === "location" && typeof window !== "undefined" && window.naver && !mapRef.current) {
+            const mapContainer = document.getElementById("edit-map");
 
             if (mapContainer) {
                 const mapOptions: naver.maps.MapOptions = {
-                    center: new naver.maps.LatLng(37.3595704, 127.105399), //지도의 초기 중심 좌표
+                    center: meeting.location
+                        ? new naver.maps.LatLng(meeting.location.lat, meeting.location.lng)
+                        : new naver.maps.LatLng(37.3595704, 127.105399),
                     zoom: 15, //지도의 초기 줌 레벨
                     minZoom: 7, //지도의 최소 줌 레벨
                     zoomControl: true, //줌 컨트롤의 표시 여부
@@ -83,21 +85,26 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                 }
 
                 const map = new naver.maps.Map(mapContainer, mapOptions);
-                setMap(map);
+                mapRef.current = map;
 
                 naver.maps.Event.addListener(map, "click", () => {
                     infoWindowList.current.forEach(infoWindow => {
                         infoWindow.close();
                     })
                 });
+
+                if (meeting.location) {
+                    const location = meeting.location;
+                    addMapMarker(location.title, location.lng, location.lat, location.address);
+                }
             }
         }
-    }, [activeField, map]);
+    }, [activeField]);
 
     const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
             event.preventDefault();
-            if (!map) {
+            if (!mapRef.current) {
                 alert("검색 중 에러 발생 !");
                 return;
             }
@@ -121,7 +128,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                             const lng = data.mapx / 1e7; // 경도 (x 값)
                             const lat = data.mapy / 1e7;  // 위도 (y 값)
                             addMapMarker(data.title, lng, lat, data.roadAddress);
-                            if (i === 0) map.setCenter(new naver.maps.LatLng(lat, lng));
+                            if (i === 0) mapRef.current!.setCenter(new naver.maps.LatLng(lat, lng));
                         }
                     });
                 } else {
@@ -138,7 +145,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                     }
 
                     addMapMarker(title, lng, lat, addressItem.roadAddress || addressItem.jibunAddress);
-                    map.setCenter(new naver.maps.LatLng(Number(addressItem.y), Number(addressItem.x)));
+                    mapRef.current!.setCenter(new naver.maps.LatLng(Number(addressItem.y), Number(addressItem.x)));
                 }
             });
         }
@@ -159,7 +166,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     const addMapMarker = (title: string, lng: number, lat: number, address: string) => {
         let newMarker = new naver.maps.Marker({
             position: new naver.maps.LatLng(lat, lng),
-            map: map,
+            map: mapRef.current,
             title: title,
             clickable: true,
         })
@@ -178,7 +185,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
             if (infowindow.getMap()) {
                 infowindow.close();
             } else {
-                infowindow.open(map!, newMarker);
+                infowindow.open(mapRef.current!, newMarker);
 
                 setTimeout(() => {
                     const btn = document.getElementById(`setLocationBtn_${lat}_${lng}`);
@@ -210,7 +217,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     };
 
     return (
-        <div className="flex py-10 px-20 h-full">
+        <div className="flex py-5 px-10 h-full min-h-0">
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={40}>
                     <div className="pr-8 pl-1 h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
@@ -459,7 +466,7 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                 <ResizablePanel defaultSize={60}>
                     <div className="h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
                         <div
-                            id="map"
+                            id="edit-map"
                             className="h-full w-full"
                             style={{ display: activeField === "location" ? "block" : "none" }}
                         />
@@ -606,3 +613,6 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
 };
 
 export default ModifyMeeting;
+
+// TODO: 모임 수정화면 파일 초기화 확인
+// TODO: 모임 상세화면 스케쥴 UI 구현

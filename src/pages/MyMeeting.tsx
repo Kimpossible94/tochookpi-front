@@ -11,7 +11,7 @@ import {Calendar, ChevronDown, Filter, MapPin, Search, Tags, Users, X} from "luc
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
+import {Dialog, DialogContent, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import defaultImage from "@/assets/undraw_conversation_15p8.svg";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
@@ -30,8 +30,8 @@ export default function MyMeeting() {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [sortPopoverOpen, setSortPopoverOpen] = useState<boolean>(false);
+    const [openDialogId, setOpenDialogId] = useState<number | null>(null);
     const [searchParams] = useSearchParams();
-    const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm<FilterFormType>({
         resolver: zodResolver(FilterSchema),
@@ -220,7 +220,10 @@ export default function MyMeeting() {
                             <div className="grid grid-cols-1 xl:grid-cols-4">
                                 {meetings.map((meeting) => (
                                     <div key={meeting.id} className="flex flex-col gap-1 mt-4">
-                                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                                        <Dialog
+                                            open={openDialogId === meeting.id}
+                                            onOpenChange={(open) => setOpenDialogId(open ? meeting.id : null)}
+                                        >
                                             <DialogTrigger asChild>
                                                 <div className="relative flex-col shadow hover:shadow-lg w-52
                                                                 hover:border transition p-2">
@@ -289,10 +292,11 @@ export default function MyMeeting() {
                                             </DialogTrigger>
                                             <DialogContent
                                                 className="max-w-full max-h-full w-full h-full sm:max-h-[90%] sm:h-[90%] min-h-0 p-0">
-                                                <MeetingDetail meetingId={meeting.id} onClose={() => {
-                                                    setIsOpen(false);
-                                                    onSubmit(form.getValues());
-                                                }}/>
+                                                <DialogTitle />
+                                                <MeetingDetail
+                                                    meetingId={meeting.id}
+                                                    onClosed={() => setOpenDialogId(null)}
+                                                />
                                             </DialogContent>
                                         </Dialog>
                                     </div>

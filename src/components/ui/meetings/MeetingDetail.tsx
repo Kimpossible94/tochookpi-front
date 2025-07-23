@@ -5,6 +5,7 @@ import {Spinner} from "@/components/ui/spinner";
 import api from "@/services/api";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {
+    ArrowLeft,
     ArrowLeftFromLine,
     ArrowRightToLine,
     Calendar,
@@ -37,10 +38,10 @@ import ModifyMeeting from "@/pages/ModifyMeeting";
 
 interface MeetingDetailProps {
     meetingId: number;
-    onClose?: () => void;
+    onClosed?: () => void;
 }
 
-const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => {
+const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) => {
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [expand, setExpand] = useState<boolean>(false);
@@ -287,7 +288,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
 
         try {
             await api.delete(`/meetings/${meeting.id}`);
-            if(onClose) onClose();
+            if (onClosed) onClosed();
         } catch (error) {
             console.error("삭제 실패:", error);
             // TODO: 토큰 만료, 이미 삭제된 모임 등 예외 처리
@@ -317,7 +318,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
 
     return (
         <div className="flex flex-col h-full min-h-0">
-            <Tabs value={tab} className="w-full">
+            <Tabs value={tab} className="w-full overflow-y-scroll">
                 <TabsContent value="detail">
                     <DialogHeader className="shrink-0 py-5 border-b">
                         <DialogTitle className="flex flex-col sm:px-44">
@@ -547,14 +548,15 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClose }) => 
                     </div>
                 </TabsContent>
 
-                <TabsContent value="edit">
+                <TabsContent value="edit" className="mt-0">
                     <Button
                         onClick={() => setTab('detail')}
-                        className="self-center"
+                        className="self-center border-none shadow-none hover:bg-transparent p-0 ml-5"
+                        variant='outline'
                     >
                         {btnLoading ? <Spinner size="small" />
-                            : <div className="flex">
-                                <PencilLine className="w-2 h-2 self-center mr-1" /> 수정
+                            : <div className="flex self-start">
+                                <ArrowLeft className="w-2 h-2" />
                             </div>}
                     </Button>
                     <ModifyMeeting meeting={meeting} />
