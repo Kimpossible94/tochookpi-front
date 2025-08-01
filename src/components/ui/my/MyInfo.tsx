@@ -116,7 +116,7 @@ export const MyInfo = () => {
                     id="profileImageUpload"
                     onChange={handleFileChange}
                 />
-                <Label className="p-3 border border-gray-400 rounded-md"
+                <Label className="p-3 border border-gray-400 rounded-md cursor-pointer hover:opacity-60"
                        htmlFor="profileImageUpload">
                     새로운 사진 업로드
                 </Label>

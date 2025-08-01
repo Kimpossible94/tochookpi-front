@@ -35,7 +35,6 @@ const Login = () => {
                 },
             }).then(e => {
                 localStorage.setItem('accessToken', e.headers.authorization);
-
                 api.get("/users").then(response => {
                     dispatch(loginSuccess(response.data));
                     navigate(from, { replace: true});

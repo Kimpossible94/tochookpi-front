@@ -5,9 +5,8 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
-import {Calendar, ChevronDown, Filter, MapPin, Search, Users, X} from "lucide-react";
+import {Calendar, ChevronDown, Filter, MapPin, Search, X} from "lucide-react";
 import defaultImage from "../assets/undraw_conversation_15p8.svg";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {
     Meeting,
     MEETING_CATEGORIES,
@@ -23,6 +22,7 @@ import {Link, useSearchParams} from "react-router-dom";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
 import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
 import {meetingFilterSchema} from "@/lib/schemas/meeting";
+import UserBadge from "@/components/ui/user/userBadge";
 
 const FilterSchema = meetingFilterSchema;
 
@@ -211,7 +211,7 @@ const MeetingListPage: React.FC = () => {
                                             </div>
 
                                             <div className="flex flex-col p-3 justify-center flex-1 pr-5">
-                                                <div className="flex justify-between items-start">
+                                                <div className="flex justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <span
                                                             className={`w-2.5 h-2.5 rounded-full ${
@@ -235,15 +235,12 @@ const MeetingListPage: React.FC = () => {
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center text-xs font-semibold">
-                                                        <Avatar className="w-5 h-5">
-                                                            <AvatarImage
-                                                                src={
-                                                                    meeting.organizer?.profileImage ||
-                                                                    "https://github.com/shadcn.png"
-                                                                }
-                                                            />
-                                                        </Avatar>
-                                                        <span className="ml-1">{meeting.organizer?.username}</span>
+                                                        <UserBadge
+                                                            user={meeting.organizer}
+                                                            sizeClass="w-5 h-5"
+                                                            organizer={true}
+                                                            shadow={false}
+                                                        />
                                                     </div>
                                                 </div>
 
@@ -262,10 +259,6 @@ const MeetingListPage: React.FC = () => {
                                                             {meeting.location.title.replace(/<[^>]*>?/gm, "")}
                                                         </span>
                                                     )}
-                                                    <span className="flex gap-1">
-                                                        <Users className="w-4 h-4" />
-                                                        {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}
-                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

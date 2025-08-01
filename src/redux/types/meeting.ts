@@ -1,14 +1,5 @@
 import {UserInfo} from "@/redux/types/user";
 
-export interface MeetingSchedule {
-    date: string; // YYYY-MM-DD
-    events: {
-        startTime: string; // "HH:mm"
-        endTime: string;   // "HH:mm"
-        description: string;
-    }[];
-}
-
 export interface MeetingLocation {
     title: string;    // 주소지 이름
     address: string;  // 주소
@@ -62,15 +53,12 @@ export interface Meeting {
     title: string;
     category: MeetingCategory;
     description?: string;
-    organizer?: UserInfo;
+    organizer: UserInfo;
     location?: MeetingLocation;
     image?: string;
-    currentParticipantsCnt: number;
-    maxParticipantsCnt: number;
     participants: UserInfo[];
     startDate: string;
     endDate: string;
-    schedules?: MeetingSchedule[];
     status: MeetingStatus;
     review?: MeetingReview[];
     participating?: boolean;

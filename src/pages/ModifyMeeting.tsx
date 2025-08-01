@@ -7,23 +7,20 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Textarea} from "@/components/ui/textarea";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {CalendarIcon, MapPin, MapPinX, Plus, Trash2} from "lucide-react";
+import {CalendarIcon, MapPin, MapPinX} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {DateRange} from "react-day-picker";
-import {eachDayOfInterval, format} from "date-fns";
+import {format} from "date-fns";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
-import {Slider} from "@/components/ui/slider";
 import api from "@/services/api";
 import {FilePond} from 'react-filepond'
 import 'filepond/dist/filepond.min.css'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
-import {cn} from "@/lib/utils";
-import {ko} from "date-fns/locale";
-import {Card} from "@/components/ui/card";
-import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS, MeetingSchedule} from "@/redux/types/meeting";
+import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
 import {meetingSchema} from "@/lib/schemas/meeting";
+import {UserInfo} from "@/redux/types/user";
+import UserBadge from "@/components/ui/user/userBadge";
 
 interface ModifyMeetingProps {
     meeting: Meeting;
@@ -31,41 +28,46 @@ interface ModifyMeetingProps {
 
 const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
     const [activeField, setActiveField] = useState<string | null>(null);
-    const [selectedDate, setSelectedDate] = useState<string>("");
-    const [schedules, setSchedules] = useState<MeetingSchedule[]>(meeting.schedules? meeting.schedules : []);
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(meeting.startDate),
         to: new Date(meeting.endDate),
     });
+    const [nonParticipants, setNonParticipants] = useState<UserInfo[]>([]);
+    const [participants, setParticipants] = useState<UserInfo[]>([]);
     const mapRef = useRef<naver.maps.Map | undefined>(undefined);
     const mapMarkerList = useRef<naver.maps.Marker[]>([]);
     const infoWindowList = useRef<naver.maps.InfoWindow[]>([]);
-    const selectedScheduleIndex = schedules.findIndex(s => s.date === selectedDate);
 
     const form = useForm<z.infer<typeof meetingSchema>>({
         resolver: zodResolver(meetingSchema),
         defaultValues: {
+            id: meeting.id,
             title: meeting.title,
             description: meeting.description,
             category: meeting.category,
             location: meeting.location,
+            participants: [],
             image: undefined,
-            maxParticipantsCnt: meeting.maxParticipantsCnt,
             startDate: meeting.startDate,
             endDate: meeting.endDate,
-            schedules: meeting.schedules,
         },
     });
 
-    const scheduleErrors = form.formState.errors.schedules as {
-        events?: {
-            description?: { message?: string };
-            startTime?: { message?: string };
-            endTime?: { message?: string };
-        }[];
-    }[] | undefined;
-
     const { setValue } = form;
+
+    useEffect(() => {
+        const fetchImageAsFile = () => {
+            if (!meeting.image) return;
+            fetch(meeting.image)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], "image.jpg", { type: blob.type });
+                    form.setValue('image', file);
+                });
+        };
+        fetchImageAsFile();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (activeField === "location" && typeof window !== "undefined" && window.naver && !mapRef.current) {
@@ -99,6 +101,18 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                 }
             }
         }
+
+        if (activeField === "participants") {
+            api.get("/users/summary").then(response => {
+                const allUsers: UserInfo[] = response.data
+                const participantedIds: number[] = meeting.participants.map(p => p.id);
+                const participants = allUsers.filter(user => !participantedIds.includes(user.id));
+
+                setNonParticipants(allUsers);
+                setParticipants(participants);
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeField]);
 
     const handleLocationSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -202,24 +216,37 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
         infoWindowList.current.push(infowindow);
     }
 
+    const addParticipant = (user: UserInfo) => {
+        if (!participants.find(p => p.id === user.id)) {
+            setParticipants([...participants, user]);
+        }
+    };
+
+    const removeParticipant = (user: UserInfo) => {
+        setParticipants(participants.filter(p => p.id !== user.id));
+    };
+
     const onSubmit = async (values: z.infer<typeof meetingSchema>) => {
         const formData = new FormData();
-        const { image, ...dtoWithoutImage } = values; // 구조 분해 할당
+        setValue("participants", participants.map((p) => p.id));
+        const { image, ...dtoWithoutImage } = values;
         if (values.image) formData.append("image", values.image);
+
         formData.append('meeting', new Blob([JSON.stringify(dtoWithoutImage)], {type: 'application/json'}));
+
         try {
-            await api.post("/meetings", formData).then(() => {
-                alert("성공적으로 등록되었습니다.")
+            await api.put(`/meetings/${meeting.id}`, formData).then(() => {
+                alert("성공적으로 수정하였습니다.")
             })
         } catch (error) {
-            alert("등록에 실패했습니다.")
+            alert("수정에 실패했습니다.")
         }
     };
 
     return (
         <div className="flex py-5 px-10 h-full min-h-0">
             <ResizablePanelGroup direction="horizontal">
-                <ResizablePanel defaultSize={40}>
+                <ResizablePanel defaultSize={50}>
                     <div className="pr-8 pl-1 h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
                         <Form {...form}>
                             <form
@@ -315,9 +342,8 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                                                     onupdatefiles={(fileItems) => {
                                                         const file = fileItems[0]?.file ?? undefined;
                                                         field.onChange(file);
-
                                                     }}
-                                                    labelIdle='드래그해서 올리거나 <span class="filepond--label-action w-full">클릭해서 업로드</span>'
+                                                    labelIdle='드래그해서 올리거나 <span class="filepond--label-action">클릭해서 업로드</span>'
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -326,36 +352,6 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                                 />
 
                                 <div className="grid grid-cols-2 gap-5">
-                                    <FormField
-                                        control={form.control}
-                                        name="maxParticipantsCnt"
-                                        render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">최대 참가자 수</FormLabel>
-                                                <FormControl>
-                                                    <div className="grid grid-cols-3 gap-5 col-span-1">
-                                                        <Slider
-                                                            min={1}
-                                                            max={40}
-                                                            step={1}
-                                                            value={[field.value || 0]}
-                                                            onValueChange={(value) => field.onChange(value[0])}
-                                                            className="col-span-2"
-                                                        />
-                                                        <Input
-                                                            type="number"
-                                                            value={field.value || undefined}
-                                                            onChange={(e) =>
-                                                                field.onChange(Math.min(40, Number(e.target.value)))}
-                                                            className="col-span-1"
-                                                        />
-                                                    </div>
-                                                </FormControl>
-                                                <FormMessage/>
-                                            </FormItem>
-                                        )}
-                                    />
-
                                     <FormField
                                         control={form.control}
                                         name="category"
@@ -383,23 +379,21 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                                             </FormItem>
                                         )}
                                     />
-                                </div>
 
-                                <FormField
-                                    control={form.control}
-                                    name="startDate"
-                                    render={() => (
-                                        <FormItem>
-                                            <FormLabel className="font-bold">모임 일자</FormLabel>
-                                            <FormControl>
-                                                <div className="grid grid-cols-4 gap-7">
+                                    <FormField
+                                        control={form.control}
+                                        name="startDate"
+                                        render={() => (
+                                            <FormItem>
+                                                <FormLabel className="font-bold">모임 일자</FormLabel>
+                                                <FormControl>
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <Button
                                                                 variant="outline"
-                                                                className="w-full font-normal col-span-3"
+                                                                className="w-full font-normal"
                                                             >
-                                                                <CalendarIcon />
+                                                                <CalendarIcon/>
                                                                 {date?.from ? (
                                                                     date.to ? (
                                                                         `${format(date.from, "LLL dd, y")} - ${format(date.to, "LLL dd, y")}`
@@ -426,34 +420,34 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
                                                             />
                                                         </PopoverContent>
                                                     </Popover>
+                                                </FormControl>
+                                                {form.formState.errors.startDate && (
+                                                    <p className="text-red-500 text-sm mt-1">
+                                                        {form.formState.errors.startDate.message}
+                                                    </p>
+                                                )}
+                                                {form.formState.errors.endDate && (
+                                                    <p className="text-red-500 text-sm mt-1">
+                                                        {form.formState.errors.endDate.message}
+                                                    </p>
+                                                )}
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        className="col-span-1 border-2"
-                                                        onClick={() => setActiveField("schedules")}
-                                                    >
-                                                        세부 일정 설정
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            {form.formState.errors.startDate && (
-                                                <p className="text-red-500 text-sm mt-1">
-                                                    {form.formState.errors.startDate.message}
-                                                </p>
-                                            )}
-                                            {form.formState.errors.endDate && (
-                                                <p className="text-red-500 text-sm mt-1">
-                                                    {form.formState.errors.endDate.message}
-                                                </p>
-                                            )}
-                                        </FormItem>
-                                    )}
-                                />
+                                <div className="pt-10 flex flex-col gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="col-span-1 border-2"
+                                        onClick={() => setActiveField("participants")}
+                                    >
+                                        참여자 설정
+                                    </Button>
 
-                                <div className="pt-10">
                                     <Button type="submit" className="w-full">
-                                        모임 만들기
+                                        모임 수정
                                     </Button>
                                 </div>
                             </form>
@@ -463,148 +457,52 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
 
                 <ResizableHandle withHandle />
 
-                <ResizablePanel defaultSize={60}>
+                <ResizablePanel defaultSize={50}>
                     <div className="h-full overflow-y-auto flex justify-center items-start scrollbar-hide">
                         <div
                             id="edit-map"
                             className="h-full w-full"
                             style={{ display: activeField === "location" ? "block" : "none" }}
                         />
+                        {!activeField && <p className="text-gray-500 h-full content-center">항목을 선택하면 여기 표시됩니다.</p>}
 
-                        {activeField === "schedules" && date?.from && date?.to && (
-                            <div className="w-full">
-                                <div className="flex overflow-x-auto space-x-2 px-4 py-2 border-b bg-white sticky top-0 z-10">
-                                    {eachDayOfInterval({ start: date.from, end: date.to }).map((day) => {
-                                        const formattedDate = format(day, "yyyy-MM-dd");
-                                        return (
-                                            <button
-                                                key={formattedDate}
-                                                onClick={() => setSelectedDate(formattedDate)}
-                                                className={cn(
-                                                    "px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap",
-                                                    selectedDate === formattedDate
-                                                        ? "bg-black text-white"
-                                                        : "bg-gray-100 hover:bg-gray-200"
-                                                )}
-                                            >
-                                                {format(day, "EEE", { locale: ko })}<br />
-                                                {format(day, "MM/dd")}
-                                            </button>
-                                        );
-                                    })}
+                        {activeField === "participants" && (
+                            <div className="flex flex-col h-full p-4 w-full">
+                                <div>
+                                    <h3 className="font-bold">참가하지 않은 사람</h3>
+                                    <span className="text-sm text-gray-500">클릭해서 참가자로 추가</span>
+                                    <div className="mt-3 flex flex-wrap overflow-auto gap-3 min-h-40">
+                                        {nonParticipants
+                                            .filter(np => !participants.find(p => p.id === np.id))
+                                            .map(user => (
+                                                <UserBadge key={user.id}
+                                                           user={user}
+                                                           sizeClass="w-7 h-7"
+                                                           organizer={false}
+                                                           shadow={true}
+                                                           onClick={() => addParticipant(user)} />
+                                            ))}
+                                    </div>
                                 </div>
 
-                                {selectedDate && (
-                                    <div className="p-4 flex flex-col w-full space-y-4">
-                                        {(schedules.find(s => s.date === selectedDate)?.events || []).map((event, i) => {
-                                            const eventError = scheduleErrors?.[selectedScheduleIndex]?.events?.[i];
+                                <hr className="my-4" />
 
-                                            return (
-                                                <Card key={i} className="w-full p-4 space-y-3 shadow-sm border">
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <Input
-                                                            placeholder="일정을 적어주세요."
-                                                            style={{ fontSize: "1.1rem" }}
-                                                            className="pl-0 flex-1 focus-visible:ring-0 border-none shadow-none font-bold"
-                                                            value={event.description}
-                                                            onChange={(e) => {
-                                                                const newSchedules = [...schedules];
-                                                                newSchedules.find(s => s.date === selectedDate)!.events[i].description = e.target.value;
-                                                                setSchedules(newSchedules);
-                                                                form.setValue("schedules", newSchedules);
-                                                            }}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const newSchedules = schedules.map(s => {
-                                                                    if (s.date === selectedDate) {
-                                                                        return {
-                                                                            ...s,
-                                                                            events: s.events.filter((_, idx) => idx !== i)
-                                                                        };
-                                                                    }
-                                                                    return s;
-                                                                });
-                                                                setSchedules(newSchedules);
-                                                                form.setValue("schedules", newSchedules);
-                                                            }}
-                                                            className="text-red-400 hover:text-red-600 ml-2"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
-                                                    </div>
-
-                                                    {eventError?.description?.message && (
-                                                        <p className="text-sm text-red-500">{eventError.description.message}</p>
-                                                    )}
-
-                                                    <div className="flex">
-                                                        <div className="flex items-center gap-2">
-                                                            <Label className="text-sm whitespace-nowrap font-bold">시작 시간</Label>
-                                                            <Input
-                                                                type="time"
-                                                                value={event.startTime}
-                                                                onChange={(e) => {
-                                                                    const newSchedules = [...schedules];
-                                                                    newSchedules.find(s => s.date === selectedDate)!.events[i].startTime = e.target.value;
-                                                                    setSchedules(newSchedules);
-                                                                    form.setValue("schedules", newSchedules);
-                                                                }}
-                                                            />
-                                                            {eventError?.startTime?.message && (
-                                                                <p className="text-sm text-red-500">{eventError.startTime.message}</p>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex items-center gap-2 ml-3">
-                                                            <Label className="text-sm whitespace-nowrap font-bold">종료 시간</Label>
-                                                            <Input
-                                                                type="time"
-                                                                value={event.endTime}
-                                                                onChange={(e) => {
-                                                                    const newSchedules = [...schedules];
-                                                                    newSchedules.find(s => s.date === selectedDate)!.events[i].endTime = e.target.value;
-                                                                    setSchedules(newSchedules);
-                                                                    form.setValue("schedules", newSchedules);
-                                                                }}
-                                                            />
-                                                            {eventError?.endTime?.message && (
-                                                                <p className="text-sm text-red-500">{eventError.endTime.message}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </Card>
-                                            );
-                                        })}
-
-                                        <div className="pt-2">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                    const newSchedules = [...schedules];
-                                                    const scheduleForDate = newSchedules.find(s => s.date === selectedDate);
-                                                    if (scheduleForDate) {
-                                                        scheduleForDate.events.push({ startTime: "", endTime: "", description: "" });
-                                                    } else {
-                                                        newSchedules.push({
-                                                            date: selectedDate,
-                                                            events: [{ startTime: "", endTime: "", description: "" }],
-                                                        });
-                                                    }
-                                                    setSchedules(newSchedules);
-                                                    form.setValue("schedules", newSchedules);
-                                                }}
-                                            >
-                                                <Plus className="w-4 h-4 mr-2" />
-                                                일정 추가
-                                            </Button>
-                                        </div>
+                                <div>
+                                    <h3 className="font-bold">참가자 목록</h3>
+                                    <span className="text-sm text-gray-500">클릭해서 참가자 목록에서 제거</span>
+                                    <div className="mt-3 flex flex-wrap overflow-auto gap-3 min-h-40">
+                                        {participants.map(user => (
+                                            <UserBadge key={user.id}
+                                                       user={user}
+                                                       sizeClass="w-7 h-7"
+                                                       organizer={false}
+                                                       shadow={true}
+                                                       onClick={() => removeParticipant(user)} />
+                                        ))}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
-                        {!activeField && <p className="text-gray-500 h-full content-center">항목을 선택하면 여기 표시됩니다.</p>}
                     </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
@@ -613,6 +511,3 @@ const ModifyMeeting: React.FC<ModifyMeetingProps> = ({meeting}) => {
 };
 
 export default ModifyMeeting;
-
-// TODO: 모임 수정화면 파일 초기화 확인
-// TODO: 모임 상세화면 스케쥴 UI 구현

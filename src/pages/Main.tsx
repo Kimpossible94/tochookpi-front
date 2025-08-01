@@ -32,13 +32,13 @@ const Main: React.FC = () => {
         <section className="flex flex-col items-center">
             <div className="p-20 text-center">
                 <p className="pl-1 text-6xl font-medium leading-tight">
-                    토축피 모여라에 <br/>
+                    토축피 다이어리에 <br/>
                 </p>
                 <p className="pl-1 text-6xl font-extrabold leading-tight mb-6">
                     오신 걸 환영합니다
                 </p>
                 <p className="pl-1 text-lg opacity-80 mb-8">
-                    다양한 모임을 만들고 친구들과 함께하세요!
+                    친구들과 함께한 다양한 모임을 기록하세요!
                 </p>
                 <Link to="/create-meeting">
                     <button

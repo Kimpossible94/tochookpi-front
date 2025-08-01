@@ -7,7 +7,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import api from "@/services/api";
 import {Badge} from "@/components/ui/badge";
-import {Calendar, ChevronDown, Filter, MapPin, Search, Tags, Users, X} from "lucide-react";
+import {Calendar, ChevronDown, Filter, MapPin, Search, Tags, X} from "lucide-react";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -261,10 +261,6 @@ export default function MyMeeting() {
                                                             <span className="flex items-center">
                                                                 <Tags className="w-3 h-3 mr-1" />
                                                                 {MEETING_CATEGORY_LABELS[meeting.category]}
-                                                            </span>
-                                                            <span className="flex items-center">
-                                                                <Users className="w-3 h-3 mr-1" />
-                                                                {meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}
                                                             </span>
                                                             <div className="flex items-center">
                                                                 <Avatar className="w-4 h-4">

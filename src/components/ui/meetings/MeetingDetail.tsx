@@ -9,15 +9,12 @@ import {
     ArrowLeftFromLine,
     ArrowRightToLine,
     Calendar,
-    Crown,
     Frown,
     Map,
     MapPin,
     PencilLine,
-    Trash,
-    UserRound
+    Trash
 } from "lucide-react";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import {Button} from "@/components/ui/button";
 import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {useSelector} from "react-redux";
@@ -35,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {Tabs, TabsContent} from "@/components/ui/tabs";
 import ModifyMeeting from "@/pages/ModifyMeeting";
+import UserBadge from "@/components/ui/user/userBadge";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -66,73 +64,6 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         setLoading(true);
         try {
             const response = await api.get(`/meetings/${meetingId}`);
-            response.data.participants = [
-                {
-                    id: 2,
-                    username: '김영범',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 3,
-                    username: '김영범2',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 4,
-                    username: '김영범3',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 5,
-                    username: '김영범444444',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 5,
-                    username: '김영범444444',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 5,
-                    username: '김영범444444',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 5,
-                    username: '김영범444444',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                }, {
-                    id: 5,
-                    username: '김영범444444',
-                    email: '',
-                    profileImage: '',
-                    bio: '',
-                    address: '',
-                    userSetting: null
-                },
-            ];
 
             response.data.review = [
                 {
@@ -256,7 +187,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
             await api.post(`/meetings/${meeting.id}/join`);
 
             setMeeting(prev => prev ?
-                { ...prev, participating: true, currentParticipantsCnt: prev.currentParticipantsCnt + 1 } : prev);
+                { ...prev, participating: true } : prev);
         } catch (error) {
             console.error("참여 실패:", error);
             //TODO: 참여 실패(토큰 만료, 이미 삭제된 모임, 종료된 모임 등)의 경우 에러처리 추가 해야함.
@@ -273,7 +204,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
             await api.post(`/meetings/${meeting.id}/leave`);
 
             setMeeting(prev => prev ?
-                {...prev, participating: false, currentParticipantsCnt: prev.currentParticipantsCnt - 1 } : prev);
+                {...prev, participating: false } : prev);
         } catch (error) {
             console.error("나가기 실패:", error);
             // TODO: 토큰 만료, 모임 종료, 삭제된 모임 등 예외 처리
@@ -328,10 +259,6 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                     <p className="text-3xl font-bold mt-2">{meeting.title}</p>
                                     <div className="text-sm flex mt-2 text-gray-600 gap-3">
                                         <p className="flex gap-1 items-center">
-                                            <UserRound className="w-4 h-4"/>
-                                            <span>{meeting.currentParticipantsCnt} / {meeting.maxParticipantsCnt}</span>
-                                        </p>
-                                        <p className="flex gap-1 items-center">
                                             <MapPin className="w-4 h-4"/>
                                             <span>{meeting.location?.title.replace(/<[^>]*>?/gm, "")}</span>
                                             <Map className="w-4 h-4 ml-1"/>
@@ -345,7 +272,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                 </div>
 
                                 <div className="flex gap-2">
-                                    {meeting.organizer?.email === user?.email && (
+                                    {meeting.organizer?.id === user?.id && (
                                         <div className="flex gap-2">
                                             <AlertDialog>
                                                 <AlertDialogTrigger>
@@ -450,45 +377,14 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
 
                                 <CardContent className="m-3 mt-4 p-0 overflow-y-scroll">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                        <div className="flex text-sm col-span-1">
-                                            <Avatar className="w-6 h-6">
-                                                <AvatarImage
-                                                    src={meeting.organizer?.profileImage || "https://github.com/shadcn.png"}/>
-                                            </Avatar>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <div className="flex">
-                                                            <span className="ml-1 content-center truncate cursor-default">
-                                                                {meeting.organizer?.username}
-                                                            </span>
-                                                            <Crown className="w-4 h-4 ml-1 self-center text-yellow-500"/>
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent side="top">
-                                                        {meeting.organizer?.username}
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-
                                         {meeting.participants?.map((user, idx) => (
                                             <div key={idx} className="flex text-sm">
-                                                <Avatar className="w-6 h-6">
-                                                    <AvatarImage src={user.profileImage || "https://github.com/shadcn.png"}/>
-                                                </Avatar>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <span className="ml-1 content-center truncate cursor-default">
-                                                                {user.username}
-                                                            </span>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top">
-                                                            {user.username}
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <UserBadge
+                                                    user={user}
+                                                    sizeClass="w-6 h-6"
+                                                    shadow={false}
+                                                    organizer={meeting.organizer.id === user.id}
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -497,7 +393,12 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
 
                             <div className="col-span-1 lg:col-span-6 flex flex-col mt-10">
                                 <p className="text-md font-semibold my-2">어디서 모이나요 ?</p>
-                                <div id="map" className="w-full h-72 rounded-3xl"/>
+                                {meeting.location ?
+                                    <div id="map" className="w-full h-72 rounded-3xl"/>
+                                    : <div className="w-full h-72 content-center text-center bg-gray-50 rounded-3xl">
+                                        <span>모임 장소를 설정하지 않았어요 🥲</span>
+                                    </div>
+                                }
                             </div>
 
                             <div className="col-span-1 lg:col-span-6 flex flex-col mt-10 min-h-72">
@@ -555,7 +456,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                         variant='outline'
                     >
                         {btnLoading ? <Spinner size="small" />
-                            : <div className="flex self-start">
+                            : <div className="flex self-end">
                                 <ArrowLeft className="w-2 h-2" />
                             </div>}
                     </Button>
