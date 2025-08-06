@@ -12,8 +12,13 @@ import {
     Frown,
     Map,
     MapPin,
+    Paperclip,
     PencilLine,
-    Trash
+    PlayCircle,
+    SendHorizonal,
+    Trash,
+    X,
+    ZoomIn
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
@@ -33,6 +38,11 @@ import {
 import {Tabs, TabsContent} from "@/components/ui/tabs";
 import ModifyMeeting from "@/pages/ModifyMeeting";
 import UserBadge from "@/components/ui/user/userBadge";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {useForm} from "react-hook-form";
+import {z} from "zod";
+import {meetingReviewSchema} from "@/lib/schemas/meeting";
+import {zodResolver} from "@hookform/resolvers/zod";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -47,6 +57,26 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
     const [btnLoading, setBtnLoading] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
     const mapRef = useRef<naver.maps.Map | null>(null);
+    type PreviewFile = {
+        file: File;
+        url: string;
+    };
+    const [previewFiles, setPreviewFiles] = useState<PreviewFile[]>([]);
+    const [selectedMedia, setSelectedMedia] = useState<{
+        file: File;
+        type: "image" | "video";
+        url: string;
+    } | null>(null);
+
+    const form = useForm<z.infer<typeof meetingReviewSchema>>({
+        resolver: zodResolver(meetingReviewSchema),
+        defaultValues: {
+            meetingId: meetingId,
+            writerId: user?.id,
+            files: [],
+            comments: '',
+        },
+    });
 
     useEffect(() => {
         fetchMeetingDetails();
@@ -64,70 +94,6 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         setLoading(true);
         try {
             const response = await api.get(`/meetings/${meetingId}`);
-
-            response.data.review = [
-                {
-                    images: [
-                        "https://picsum.photos/300/300?random=1",
-                        "https://picsum.photos/400/300?random=1",
-                        "https://picsum.photos/400/300?random=1",
-                    ],
-                    comments: "정말 즐거운 시간이었습니다! 다음에도 꼭 다시 참석하고 싶어요.",
-                    writer: {
-                        id: 10,
-                        username: "홍길동",
-                        email: "",
-                        profileImage: "https://i.pravatar.cc/150?img=10",
-                        bio: "",
-                        address: "",
-                        userSetting: null
-                    },
-                    createdAt: "2025-06-01T12:34:56"
-                },
-                {
-                    images: [],
-                    comments: "생각보다 분위기가 너무 좋았고, 새로운 친구도 사귈 수 있었습니다.",
-                    writer: {
-                        id: 11,
-                        username: "이순신",
-                        email: "",
-                        profileImage: "https://i.pravatar.cc/150?img=11",
-                        bio: "",
-                        address: "",
-                        userSetting: null
-                    },
-                    createdAt: "2025-06-10T15:22:10"
-                },
-                {
-                    images: ["https://picsum.photos/500/300?random=1"],
-                    comments: "모임 장소도 깔끔했고, 주최자분도 친절했어요!",
-                    writer: {
-                        id: 12,
-                        username: "강감찬",
-                        email: "",
-                        profileImage: "",
-                        bio: "",
-                        address: "",
-                        userSetting: null
-                    },
-                    createdAt: "2025-06-20T09:12:45"
-                },
-                {
-                    images: ["https://picsum.photos/500/300?random=1"],
-                    comments: "모임 장소도 깔끔했고, 주최자분도 친절했어요!",
-                    writer: {
-                        id: 12,
-                        username: "강감찬",
-                        email: "",
-                        profileImage: "",
-                        bio: "",
-                        address: "",
-                        userSetting: null
-                    },
-                    createdAt: "2025-06-20T09:12:45"
-                }
-            ];
-
             setMeeting(response.data);
         } catch (error) {
             console.error("모임 데이터를 불러오는 중 오류 발생:", error);
@@ -228,6 +194,63 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (files.length === 0) return;
+
+        const newPreviewItems: PreviewFile[] = files.map(file => ({
+            file,
+            url: URL.createObjectURL(file),
+        }));
+
+        const updatedPreviewFiles = [...previewFiles, ...newPreviewItems];
+        setPreviewFiles(updatedPreviewFiles);
+
+        form.setValue("files", updatedPreviewFiles.map(p => p.file));
+    };
+
+    const removeFile = (index: number) => {
+        const fileToRemove = previewFiles[index];
+
+        URL.revokeObjectURL(fileToRemove.url);
+
+        const newPreviewFiles = previewFiles.filter((_, i) => i !== index);
+        setPreviewFiles(newPreviewFiles);
+
+        form.setValue("files", newPreviewFiles.map(p => p.file));
+
+        if (selectedMedia?.file === fileToRemove.file) {
+            setSelectedMedia(null);
+        }
+    };
+
+    const handleMediaClick = (file: File) => {
+        setSelectedMedia({
+            type: file.type.startsWith("image/") ? "image" : "video",
+            file,
+            url: previewFiles.find(p => p.file === file)?.url || "",
+        });
+    };
+
+    const handleReviewSubmit = async (data: z.infer<typeof meetingReviewSchema>) => {
+        const formData = new FormData();
+        const { files, ...dtoWithoutFiles } = data;
+        if (data.files) {
+            data.files.forEach(file => {
+                formData.append("files", file);
+            });
+        }
+        formData.append('review', new Blob([JSON.stringify(dtoWithoutFiles)], {type: 'application/json'}));
+
+        try {
+            await api.post("/reviews", formData).then(() => {
+                alert("성공적으로 등록되었습니다.")
+            })
+        } catch (error) {
+            alert("등록에 실패했습니다.")
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -248,7 +271,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
     }
 
     return (
-        <div className="flex flex-col h-full min-h-0">
+        <div className='flex flex-col h-full min-h-0'>
             <Tabs value={tab} className="w-full overflow-y-scroll">
                 <TabsContent value="detail">
                     <DialogHeader className="shrink-0 py-5 border-b">
@@ -346,7 +369,8 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto">
-                        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 h-full min-h-0 overflow-y-scroll sm:px-44 pt-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 h-full min-h-0 overflow-y-scroll
+                                        sm:px-44 py-10">
                             {meeting.image && (
                                 <div className="col-span-1 lg:col-span-6 lg:row-span-1 w-full">
                                     <img
@@ -445,6 +469,119 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                     </div>
                                 )}
                             </div>
+
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(handleReviewSubmit)} className="w-full col-span-1 lg:col-span-6">
+                                    <p className="text-md font-semibold my-2">모임 후기 남기기</p>
+                                    {previewFiles.length > 0 && (
+                                        <div className="flex w-full flex-wrap gap-4">
+                                            {previewFiles.map((previewFile, index) => {
+                                                const isImage = previewFile.file.type.startsWith("image/");
+
+                                                return (
+                                                    <div key={index} className="relative w-32 h-32 rounded overflow-hidden group shadow border">
+                                                        {isImage ? (
+                                                            <img src={previewFile.url} alt={`preview-${index}`} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <video src={previewFile.url} className="w-full h-full object-cover" muted />
+                                                        )}
+
+                                                        <button
+                                                            type="button"
+                                                            className="absolute bottom-1 left-1 bg-white text-black hover:bg-opacity-50 p-0.5 rounded"
+                                                            onClick={() => handleMediaClick(previewFile.file)}
+                                                        >
+                                                            {isImage ? <ZoomIn className="w-4 h-4" /> : <PlayCircle className="w-4 h-4" />}
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="absolute top-1 right-1 bg-white text-black hover:bg-opacity-50 p-0.5 rounded"
+                                                            onClick={() => removeFile(index)}
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {selectedMedia && (
+                                        <div className="relative mt-4 border rounded-lg p-4">
+                                            <button
+                                                type="button"
+                                                className="absolute top-1 right-1 bg-whitetext-black
+                                                            hover:bg-opacity-50 p-0.5 rounded"
+                                                onClick={() => setSelectedMedia(null)}
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                            {selectedMedia.type === "image" ? (
+                                                <img src={selectedMedia.url} alt="selected" className="max-w-full max-h-96 mx-auto rounded" />
+                                            ) : (
+                                                <video controls className="max-w-full max-h-96 mx-auto rounded" src={selectedMedia.url} />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="border-gray-300 border w-full rounded-md flex flex-col px-5 py-3 mt-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="comments"
+                                            render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel></FormLabel>
+                                                    <FormControl>
+                                                        <textarea
+                                                            className="w-full resize-none outline-none"
+                                                            rows={4}
+                                                            placeholder="이번 모임에 대해서 한마디 남겨주세요."
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage/>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <hr className="my-2" />
+
+                                        <div className="flex w-full justify-between">
+                                            <FormField
+                                                control={form.control}
+                                                name="files"
+                                                render={() => (
+                                                    <FormItem className="flex">
+                                                        <FormLabel className={`cursor-pointer content-center hover:opacity-50
+                                                                ${previewFiles.length > 0 && 'border rounded-md px-2 flex items-center'}
+                                                                ${previewFiles.length > 10 && 'bg-red-600 text-white'}`}>
+                                                            <Paperclip className="w-4 h-4" />
+                                                            {previewFiles.length > 0 &&
+                                                                (<span className="ml-1">{previewFiles.length} / 10</span>)}
+                                                        </FormLabel>
+
+                                                        <FormControl>
+                                                            <input
+                                                                type="file"
+                                                                multiple
+                                                                accept="image/*,video/*"
+                                                                className="hidden"
+                                                                onChange={handleFileChange}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage className="ml-2" />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <Button type="submit" variant="outline">
+                                                <SendHorizonal />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </Form>
                         </div>
                     </div>
                 </TabsContent>

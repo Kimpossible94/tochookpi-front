@@ -25,3 +25,19 @@ export const meetingFilterSchema = z.object({
     category: z.array(z.enum(MEETING_CATEGORIES)).optional(),
     sortOption: z.enum(MEETING_SORT_OPTIONS).optional(),
 })
+
+export const meetingReviewSchema = z.object({
+    id: z.number().optional(),
+    writerId: z.number(),
+    meetingId: z.number(),
+    comments: z.string().optional(),
+    files: z.array(z.instanceof(File)).max(10, '파일은 한 번에 10개까지 업로드 가능합니다.').optional(),
+    createdAt: z.string().optional(),
+}).refine(data => {
+    const hasComment = data.comments && data.comments.trim().length > 0;
+    const hasFile = data.files && data.files.length > 0;
+    return hasComment || hasFile;
+}, {
+    message: '한마디 또는 파일첨부중 하나 이상을 입력해주세요.',
+    path: ['comments'],
+});
