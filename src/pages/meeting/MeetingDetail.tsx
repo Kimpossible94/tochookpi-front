@@ -1,9 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Meeting, MEETING_CATEGORY_LABELS, MeetingLocation} from "@/redux/types/meeting";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
-import {Spinner} from "@/components/ui/spinner";
+import {Meeting, MEETING_CATEGORY_LABELS, MeetingLocation, ReviewFile} from "@/redux/types/meeting";
+import {Spinner} from "@/components/ui/shadcn/spinner";
 import api from "@/services/api";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/shadcn/card";
 import {
     ArrowLeft,
     ArrowLeftFromLine,
@@ -14,14 +13,11 @@ import {
     MapPin,
     Paperclip,
     PencilLine,
-    PlayCircle,
     SendHorizonal,
-    Trash,
-    X,
-    ZoomIn
+    Trash
 } from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {Button} from "@/components/ui/shadcn/button";
+import {DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/shadcn/dialog";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
 import {
@@ -34,15 +30,18 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger
-} from "@/components/ui/alert-dialog";
-import {Tabs, TabsContent} from "@/components/ui/tabs";
-import ModifyMeeting from "@/pages/ModifyMeeting";
+} from "@/components/ui/shadcn/alert-dialog";
+import {Tabs, TabsContent} from "@/components/ui/shadcn/tabs";
+import ModifyMeeting from "./ModifyMeeting";
 import UserBadge from "@/components/ui/user/userBadge";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/shadcn/form";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {meetingReviewSchema} from "@/lib/schemas/meeting";
 import {zodResolver} from "@hookform/resolvers/zod";
+import ReviewCard from "@/components/ui/meetings/ReviewCard";
+import FilePreview from "@/components/ui/meetings/FilePreview";
+import EnlargeFile from "@/components/ui/meetings/EnlargeFile";
 
 interface MeetingDetailProps {
     meetingId: number;
@@ -57,16 +56,8 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
     const [btnLoading, setBtnLoading] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
     const mapRef = useRef<naver.maps.Map | null>(null);
-    type PreviewFile = {
-        file: File;
-        url: string;
-    };
-    const [previewFiles, setPreviewFiles] = useState<PreviewFile[]>([]);
-    const [selectedMedia, setSelectedMedia] = useState<{
-        file: File;
-        type: "image" | "video";
-        url: string;
-    } | null>(null);
+    const [previewFiles, setPreviewFiles] = useState<ReviewFile[]>([]);
+    const [selectedPreviewFile, setSelectedPreviewFile] = useState<ReviewFile | null>(null);
 
     const form = useForm<z.infer<typeof meetingReviewSchema>>({
         resolver: zodResolver(meetingReviewSchema),
@@ -198,8 +189,9 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         const files = Array.from(e.target.files ?? []);
         if (files.length === 0) return;
 
-        const newPreviewItems: PreviewFile[] = files.map(file => ({
+        const newPreviewItems: ReviewFile[] = files.map(file => ({
             file,
+            type: file.type.startsWith("image/") ? 'IMAGE' : 'VIDEO',
             url: URL.createObjectURL(file),
         }));
 
@@ -219,17 +211,21 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
 
         form.setValue("files", newPreviewFiles.map(p => p.file));
 
-        if (selectedMedia?.file === fileToRemove.file) {
-            setSelectedMedia(null);
+        if (selectedPreviewFile?.file === fileToRemove.file) {
+            setSelectedPreviewFile(null);
         }
     };
 
-    const handleMediaClick = (file: File) => {
-        setSelectedMedia({
-            type: file.type.startsWith("image/") ? "image" : "video",
-            file,
-            url: previewFiles.find(p => p.file === file)?.url || "",
+    const handlePreviewFileClick = (file: ReviewFile) => {
+        setSelectedPreviewFile({
+            type: file.type,
+            file: file.file,
+            url: file.url,
         });
+    };
+
+    const handleEnlargeClose = () => {
+        setSelectedPreviewFile(null);
     };
 
     const handleReviewSubmit = async (data: z.infer<typeof meetingReviewSchema>) => {
@@ -429,38 +425,9 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                 <p className="text-md font-semibold my-2">모임 후기</p>
 
                                 {meeting.review && meeting.review.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                                    <div className="w-full space-y-3 pb-10">
                                         {meeting.review.map((review, index) => (
-                                            <Card key={index} className="p-4 space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="w-7 h-7">
-                                                        <AvatarImage
-                                                            src={review.writer.profileImage || "https://github.com/shadcn.png"}/>
-                                                    </Avatar>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-medium">{review.writer.username}</span>
-                                                        {review.createdAt && (
-                                                            <span
-                                                                className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <p className="text-sm text-gray-800 whitespace-pre-line">{review.comments}</p>
-
-                                                {review.images.length > 0 && (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {review.images.map((imgUrl, imgIdx) => (
-                                                            <img
-                                                                key={imgIdx}
-                                                                src={imgUrl}
-                                                                alt={`후기 이미지 ${imgIdx + 1}`}
-                                                                className="w-full h-32 object-cover rounded-md"
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </Card>
+                                            <ReviewCard key={index} review={review}/>
                                         ))}
                                     </div>
                                 ) : (
@@ -476,53 +443,24 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                     {previewFiles.length > 0 && (
                                         <div className="flex w-full flex-wrap gap-4">
                                             {previewFiles.map((previewFile, index) => {
-                                                const isImage = previewFile.file.type.startsWith("image/");
-
                                                 return (
-                                                    <div key={index} className="relative w-32 h-32 rounded overflow-hidden group shadow border">
-                                                        {isImage ? (
-                                                            <img src={previewFile.url} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <video src={previewFile.url} className="w-full h-full object-cover" muted />
-                                                        )}
-
-                                                        <button
-                                                            type="button"
-                                                            className="absolute bottom-1 left-1 bg-white text-black hover:bg-opacity-50 p-0.5 rounded"
-                                                            onClick={() => handleMediaClick(previewFile.file)}
-                                                        >
-                                                            {isImage ? <ZoomIn className="w-4 h-4" /> : <PlayCircle className="w-4 h-4" />}
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            className="absolute top-1 right-1 bg-white text-black hover:bg-opacity-50 p-0.5 rounded"
-                                                            onClick={() => removeFile(index)}
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                );
+                                                    <FilePreview
+                                                        key={index}
+                                                        file={previewFile}
+                                                        index={index}
+                                                        deleteBtn={true}
+                                                        onClickEnlarge={handlePreviewFileClick}
+                                                        onClickDelete={removeFile}
+                                                    />)
                                             })}
                                         </div>
                                     )}
 
-                                    {selectedMedia && (
-                                        <div className="relative mt-4 border rounded-lg p-4">
-                                            <button
-                                                type="button"
-                                                className="absolute top-1 right-1 bg-whitetext-black
-                                                            hover:bg-opacity-50 p-0.5 rounded"
-                                                onClick={() => setSelectedMedia(null)}
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                            {selectedMedia.type === "image" ? (
-                                                <img src={selectedMedia.url} alt="selected" className="max-w-full max-h-96 mx-auto rounded" />
-                                            ) : (
-                                                <video controls className="max-w-full max-h-96 mx-auto rounded" src={selectedMedia.url} />
-                                            )}
-                                        </div>
+                                    {selectedPreviewFile && (
+                                        <EnlargeFile
+                                            file={selectedPreviewFile}
+                                            onClickClose={handleEnlargeClose}
+                                        />
                                     )}
 
                                     <div className="border-gray-300 border w-full rounded-md flex flex-col px-5 py-3 mt-2">
@@ -603,5 +541,10 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         </div>
     );
 };
+
+// TODO: 모임후기 목록에서 사진 및 동영상 확대 (완료)
+// TODO: 모임 후기 수정
+// TODO: 모임 후기 삭제
+// TODO: 모임 CRUD 작업 후 후처리 (입력창 비움 및 목록 새로고침)
 
 export default MeetingDetail;

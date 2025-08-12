@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Link} from "react-router-dom";
-import {Avatar, AvatarImage} from "../ui/avatar";
+import {Avatar, AvatarImage} from "../ui/shadcn/avatar";
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -8,7 +8,7 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
     NavigationMenuTrigger,
-} from "../ui/navigation-menu";
+} from "../ui/shadcn/navigation-menu";
 import {cn} from "@/lib/utils";
 import {BellIcon} from "@radix-ui/react-icons";
 import {useDispatch, useSelector} from "react-redux";
@@ -20,7 +20,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuShortcut,
     DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/shadcn/dropdown-menu";
 import {LogOut, UserPen} from "lucide-react";
 import {logoutSuccess} from "@/redux/reducers/userSlice";
 import api from "@/services/api";

@@ -7,8 +7,15 @@ export interface MeetingLocation {
     lat: number;      // 위도
 }
 
+export interface ReviewFile {
+    file: File;
+    type: "IMAGE" | "VIDEO";
+    url: string;
+};
+
 export interface MeetingReview {
-    images: string[];
+    id: number;
+    files: ReviewFile[];
     comments: string;
     writer: UserInfo;
     createdAt?: string;

@@ -1,5 +1,5 @@
 import {UserInfo} from "@/redux/types/user";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {Avatar, AvatarImage} from "@/components/ui/shadcn/avatar";
 import React from "react";
 import {Crown} from "lucide-react";
 

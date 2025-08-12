@@ -2,11 +2,11 @@ import React, {useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
+import {Button} from "@/components/ui/shadcn/button";
+import {Input} from "@/components/ui/shadcn/input";
+import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/shadcn/popover";
 import {Calendar, ChevronDown, Filter, MapPin, Search, X} from "lucide-react";
-import defaultImage from "../assets/undraw_conversation_15p8.svg";
+import defaultImage from "@/assets/undraw_conversation_15p8.svg";
 import {
     Meeting,
     MEETING_CATEGORIES,
@@ -17,10 +17,10 @@ import {
     MeetingSortOption
 } from "@/redux/types/meeting";
 import api from "@/services/api";
-import {Badge} from "@/components/ui/badge";
+import {Badge} from "@/components/ui/shadcn/badge";
 import {Link, useSearchParams} from "react-router-dom";
-import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
-import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
+import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/shadcn/dialog";
+import MeetingDetail from "./MeetingDetail";
 import {meetingFilterSchema} from "@/lib/schemas/meeting";
 import UserBadge from "@/components/ui/user/userBadge";
 

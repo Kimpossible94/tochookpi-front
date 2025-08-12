@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
+import {Button} from "@/components/ui/shadcn/button";
+import {Input} from "@/components/ui/shadcn/input";
+import {Label} from "@/components/ui/shadcn/label";
 import kakaoLoginBtn from "@/assets/kakao_login_medium_narrow.png";
 import naverLoginBtn from "@/assets/naver_login.png";
 import {useLocation, useNavigate} from "react-router-dom";

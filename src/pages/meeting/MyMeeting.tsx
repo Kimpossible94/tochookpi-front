@@ -1,20 +1,20 @@
 import React, {useEffect, useState} from "react";
 import {Meeting, MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting"
-import SidebarMenu from "@/components/ui/SidebarMenu";
+import SidebarMenu from "@/components/ui/shadcn/SidebarMenu";
 import {useSearchParams} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import api from "@/services/api";
-import {Badge} from "@/components/ui/badge";
+import {Badge} from "@/components/ui/shadcn/badge";
 import {Calendar, ChevronDown, Filter, MapPin, Search, Tags, X} from "lucide-react";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Dialog, DialogContent, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/shadcn/popover";
+import {Button} from "@/components/ui/shadcn/button";
+import {Input} from "@/components/ui/shadcn/input";
+import {Dialog, DialogContent, DialogTitle, DialogTrigger} from "@/components/ui/shadcn/dialog";
 import defaultImage from "@/assets/undraw_conversation_15p8.svg";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
-import MeetingDetail from "@/components/ui/meetings/MeetingDetail";
+import {Avatar, AvatarImage} from "@/components/ui/shadcn/avatar";
+import MeetingDetail from "./MeetingDetail";
 
 const FilterSchema = z.object({
     searchTerm: z.string().optional(),

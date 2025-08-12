@@ -1,7 +1,7 @@
 import api from "@/services/api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/shadcn/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/shadcn/card";
+import { Input } from "@/components/ui/shadcn/input";
 import { useState } from "react";
 import {useDispatch} from "react-redux";
 import {clearUser} from "@/redux/reducers/userSlice";

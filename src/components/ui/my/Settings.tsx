@@ -1,8 +1,8 @@
-import {Switch} from "@/components/ui/switch";
+import {Switch} from "@/components/ui/shadcn/switch";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
-import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel} from "@/components/ui/form";
-import {Button} from "@/components/ui/button";
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel} from "@/components/ui/shadcn/form";
+import {Button} from "@/components/ui/shadcn/button";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";

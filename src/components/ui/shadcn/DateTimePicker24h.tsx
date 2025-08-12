@@ -5,14 +5,14 @@ import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/shadcn/button";
+import { Calendar } from "@/components/ui/shadcn/calendar";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+} from "@/components/ui/shadcn/popover";
+import { ScrollArea, ScrollBar } from "@/components/ui/shadcn/scroll-area";
 
 export function DateTimePicker24h({ value, onChange }: { value?: Date; onChange: (date: Date | null) => void }) {
     const [internalDate, setInternalDate] = React.useState<Date | undefined>(value);

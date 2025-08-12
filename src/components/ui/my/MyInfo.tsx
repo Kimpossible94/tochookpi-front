@@ -1,11 +1,11 @@
 import * as React from "react";
-import {Button} from "@/components/ui/button";
-import {Textarea} from "@/components/ui/textarea";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {Button} from "@/components/ui/shadcn/button";
+import {Textarea} from "@/components/ui/shadcn/textarea";
+import {Input} from "@/components/ui/shadcn/input";
+import {Label} from "@/components/ui/shadcn/label";
+import {Avatar, AvatarImage} from "@/components/ui/shadcn/avatar";
 import api from "@/services/api";
-import {Command, CommandEmpty, CommandInput, CommandList} from "@/components/ui/command";
+import {Command, CommandEmpty, CommandInput, CommandList} from "@/components/ui/shadcn/command";
 import {Pencil, Save} from "lucide-react";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/redux/store";

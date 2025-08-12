@@ -1,14 +1,14 @@
 import {Route, Routes} from "react-router-dom";
 import PrivateRoute from "@/components/common/PrivateRoute";
 import Main from "@/pages/Main";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
-import MyPage from "@/pages/MyPage";
-import CreateMeeting from "@/pages/CreateMeeting";
-import MeetingList from "@/pages/MeetingList";
-import React from "react";
+import Login from "@/pages/auth/Login";
+import Signup from "@/pages/auth/Signup";
+import MyPage from "@/pages/user/MyPage";
+import CreateMeeting from "@/pages/meeting/CreateMeeting";
+import MeetingList from "@/pages/meeting/MeetingList";
+import MyMeeting from "@/pages/meeting/MyMeeting";
 import PublicRoute from "@/components/common/PublicRoute";
-import MyMeeting from "@/pages/MyMeeting";
+import React from "react";
 
 const AppRoutes = () => (
     <Routes>

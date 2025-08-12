@@ -1,22 +1,22 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/shadcn/input";
+import {Button} from "@/components/ui/shadcn/button";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {Textarea} from "@/components/ui/textarea";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/shadcn/form";
+import {Textarea} from "@/components/ui/shadcn/textarea";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/shadcn/popover";
 import {CalendarIcon, MapPin, MapPinX} from "lucide-react";
-import {Calendar} from "@/components/ui/calendar";
+import {Calendar} from "@/components/ui/shadcn/calendar";
 import {DateRange} from "react-day-picker";
 import {addDays, format} from "date-fns";
-import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
+import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/shadcn/resizable";
 import api from "@/services/api";
 import {FilePond} from 'react-filepond'
 import 'filepond/dist/filepond.min.css'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/shadcn/select";
 import {MEETING_CATEGORIES, MEETING_CATEGORY_LABELS} from "@/redux/types/meeting";
 import {meetingSchema} from "@/lib/schemas/meeting";
 import {UserInfo} from "@/redux/types/user";

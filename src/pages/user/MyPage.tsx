@@ -1,8 +1,8 @@
 import React, {useState} from "react";
-import SidebarMenu from "@/components/ui/SidebarMenu";
+import SidebarMenu from "@/components/ui/shadcn/SidebarMenu";
 import {MyInfo} from "@/components/ui/my/MyInfo";
 import {Settings} from "@/components/ui/my/Settings";
-import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {Avatar, AvatarImage} from "@/components/ui/shadcn/avatar";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
 import {DeleteAccount} from "@/components/ui/my/DeleteAccount";
