@@ -287,3 +287,5 @@ const MeetingListPage: React.FC = () => {
 };
 
 export default MeetingListPage;
+
+//TODO: 모임삭제 후 리스트 초기화 구현

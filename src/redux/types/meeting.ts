@@ -11,14 +11,17 @@ export interface ReviewFile {
     file: File;
     type: "IMAGE" | "VIDEO";
     url: string;
+    state?: "NEW" | "DELETE";
 };
 
 export interface MeetingReview {
     id: number;
+    meetingId: number;
     files: ReviewFile[];
     comments: string;
     writer: UserInfo;
     createdAt?: string;
+    deletedAt?: string;
 }
 
 export type MeetingStatus = "BEFORE" | "ONGOING" | "ENDED";
@@ -67,7 +70,8 @@ export interface Meeting {
     startDate: string;
     endDate: string;
     status: MeetingStatus;
-    review?: MeetingReview[];
+    reviews?: MeetingReview[];
     participating?: boolean;
     createdAt?: string;
+    deletedAt?: string;
 }

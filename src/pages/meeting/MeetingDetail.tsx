@@ -247,6 +247,15 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         }
     };
 
+    const handleDeleteReview = (reviewId: number) => {
+        if(!meeting) return;
+
+        setMeeting({
+            ...meeting,
+            reviews: meeting.reviews?.filter((review) => review.id !== reviewId) || []
+        });
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -424,10 +433,10 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                             <div className="col-span-1 lg:col-span-6 flex flex-col mt-10 min-h-72">
                                 <p className="text-md font-semibold my-2">모임 후기</p>
 
-                                {meeting.review && meeting.review.length > 0 ? (
+                                {meeting.reviews && meeting.reviews.length > 0 ? (
                                     <div className="w-full space-y-3 pb-10">
-                                        {meeting.review.map((review, index) => (
-                                            <ReviewCard key={index} review={review}/>
+                                        {meeting.reviews.map((review, index) => (
+                                            <ReviewCard key={index} review={review} onDelete={() => handleDeleteReview(review.id)}/>
                                         ))}
                                     </div>
                                 ) : (
