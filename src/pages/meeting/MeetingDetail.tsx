@@ -193,6 +193,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
             file,
             type: file.type.startsWith("image/") ? 'IMAGE' : 'VIDEO',
             url: URL.createObjectURL(file),
+            state: 'NEW',
         }));
 
         const updatedPreviewFiles = [...previewFiles, ...newPreviewItems];
@@ -457,7 +458,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                                         key={index}
                                                         file={previewFile}
                                                         index={index}
-                                                        deleteBtn={true}
+                                                        isEditing={true}
                                                         onClickEnlarge={handlePreviewFileClick}
                                                         onClickDelete={removeFile}
                                                     />)

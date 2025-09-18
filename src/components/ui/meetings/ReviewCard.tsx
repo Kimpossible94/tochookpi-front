@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {MeetingReview, ReviewFile} from "@/redux/types/meeting";
 import {Avatar, AvatarImage} from "@/components/ui/shadcn/avatar";
 import {Card} from "@/components/ui/shadcn/card";
@@ -6,14 +6,15 @@ import FilePreview from "@/components/ui/meetings/FilePreview";
 import EnlargeFile from "@/components/ui/meetings/EnlargeFile";
 import {useSelector} from "react-redux";
 import {RootState} from "@/redux/store";
-import {Pencil, X} from "lucide-react";
+import {Paperclip, Pencil, PencilOff, SendHorizonal, Trash2} from "lucide-react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {meetingReviewSchema} from "@/lib/schemas/meeting";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Form} from "@/components/ui/shadcn/form";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/shadcn/form";
 import api from "@/services/api";
 import {Spinner} from "@/components/ui/shadcn/spinner";
+import {Button} from "@/components/ui/shadcn/button";
 
 interface ReviewCardProps {
     review: MeetingReview;
@@ -25,6 +26,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
     const { user } = useSelector((state: RootState) => state.user);
     const [btnLoading, setBtnLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [previewFiles, setPreviewFiles] = useState<ReviewFile[]>([]);
 
     const form = useForm<z.infer<typeof meetingReviewSchema>>({
         resolver: zodResolver(meetingReviewSchema),
@@ -36,6 +38,25 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
         },
     });
 
+
+    useEffect(() => {
+        initFiles();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [review]);
+
+    const initFiles = (): void => {
+        if (review?.files?.length) {
+            setPreviewFiles(
+                review.files.map((f) => ({
+                    id: f.id,
+                    file: f.file,
+                    type: f.type,
+                    url: f.url,
+                }))
+            );
+        }
+    }
+
     const handlePreviewFileClick = (file: ReviewFile) => {
         setSelectedPreviewFile({
             type: file.type,
@@ -44,12 +65,37 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
         });
     };
 
-    const handleEnlargeClose = () => {
-        setSelectedPreviewFile(null);
+    const removeFile = (index: number) => {
+        const fileToRemove = previewFiles[index];
+
+        URL.revokeObjectURL(fileToRemove.url);
+
+        const newPreviewFiles = previewFiles.filter((_, i) => i !== index);
+        setPreviewFiles(newPreviewFiles);
+
+        // 확대된 파일이 삭제되었을 때 null처리
+        if (selectedPreviewFile?.file === fileToRemove.file) setSelectedPreviewFile(null);
     };
 
-    const handleFileDelete = async () => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (files.length === 0) return;
 
+        const newPreviewFiles: ReviewFile[] = files.map(file => ({
+            file,
+            type: file.type.startsWith("image/") ? 'IMAGE' : 'VIDEO',
+            url: URL.createObjectURL(file),
+            state: 'NEW',
+        }));
+
+        const updatedPreviewFiles = [...previewFiles, ...newPreviewFiles];
+        setPreviewFiles(updatedPreviewFiles);
+    };
+
+    const handleEditing = async () => {
+        if(isEditing) initFiles();
+        setSelectedPreviewFile(null);
+        setIsEditing(!isEditing);
     }
 
     const handleReviewDelete = async () => {
@@ -66,6 +112,34 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
             setBtnLoading(false);
         }
     }
+
+    const handleReviewUpdateSubmit = async (data: z.infer<typeof meetingReviewSchema>) => {
+        const formData = new FormData();
+
+        const dtoWithoutNewFiles = {
+            id: review.id,
+            writerId: data.writerId,
+            meetingId: data.meetingId,
+            comments: data.comments,
+            reviewFiles: previewFiles.filter(f => !f.state || f.state === "DELETE"),
+            // reviewFiles로는 기존의 파일 데이터만 전송
+        };
+        formData.append('review', new Blob([JSON.stringify(dtoWithoutNewFiles)], {type: 'application/json'}));
+
+        previewFiles
+            .filter(f => f.state === "NEW" && f.file instanceof File)
+            .forEach(f => {
+                formData.append("files", f.file);
+            });
+
+        try {
+            await api.put(`/reviews/${review.id}`, formData).then(() => {
+                alert("성공적으로 수정되었습니다.")
+            })
+        } catch (error) {
+            alert("등록에 수정에 실패했습니다.")
+        }
+    };
 
     return (
         <Card className="p-4 space-y-3 w-full">
@@ -89,11 +163,15 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
                         <button
                             type="button"
                             className="text-black hover:opacity-50 p-0.5 rounded"
+                            onClick={handleEditing}
                         >
-                            <Pencil
-                                className="w-3.5 h-3.5"
-                                onClick={() => setIsEditing(true)}
-                            />
+                            {isEditing ?
+                                <PencilOff
+                                    className="w-3.5 h-3.5"
+                                />
+                                : <Pencil
+                                    className="w-3.5 h-3.5"
+                                />}
                         </button>
                         {btnLoading ? <Spinner size="small" />
                             :  <button
@@ -101,7 +179,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
                                 className="text-red-500 hover:opacity-50 p-0.5 rounded"
                                 onClick={handleReviewDelete}
                                 >
-                                <X className="w-5 h-5"/>
+                                <Trash2 className="w-3.5 h-3.5"/>
                             </button>
                         }
                     </div>
@@ -111,38 +189,83 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
             {isEditing ? (
                 <Form {...form}>
                     <form
-                        onSubmit={form.handleSubmit((data) => {
-                            console.log("수정 데이터:", data);
-                            setIsEditing(false);
-                        })}
+                        onSubmit={form.handleSubmit(handleReviewUpdateSubmit)}
                         className="space-y-3"
                     >
-                        <textarea
-                            {...form.register("comments")}
-                            defaultValue={review.comments}
-                            className="w-full border rounded p-2 text-sm"
-                        />
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*,video/*"
-                            {...form.register("files")}
-                        />
+                        {previewFiles.length > 0 && (
+                            <div className="flex w-full flex-wrap gap-4">
+                                {previewFiles.map((previewFile, index) => {
+                                    return (
+                                        <FilePreview
+                                            key={index}
+                                            file={previewFile}
+                                            index={index}
+                                            isEditing={true}
+                                            onClickEnlarge={handlePreviewFileClick}
+                                            onClickDelete={removeFile}
+                                        />)
+                                })}
+                            </div>
+                        )}
 
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
-                            >
-                                저장
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                                className="px-3 py-1 bg-gray-300 rounded text-sm"
-                            >
-                                취소
-                            </button>
+                        {selectedPreviewFile && (
+                            <EnlargeFile file={selectedPreviewFile} onClickClose={() => setSelectedPreviewFile(null)} />
+                        )}
+
+                        <div className="border-gray-300 border w-full rounded-md flex flex-col px-5 py-3 mt-2">
+                            <FormField
+                                control={form.control}
+                                name="comments"
+                                render={({field}) => (
+                                    <FormItem>
+                                        <FormLabel></FormLabel>
+                                        <FormControl>
+                                                        <textarea
+                                                            className="w-full resize-none outline-none"
+                                                            rows={4}
+                                                            placeholder="이번 모임에 대해서 한마디 남겨주세요."
+                                                            {...field}
+                                                        />
+                                        </FormControl>
+                                        <FormMessage/>
+                                    </FormItem>
+                                )}
+                            />
+
+                            <hr className="my-2" />
+
+                            <div className="flex w-full justify-between">
+                                <FormField
+                                    control={form.control}
+                                    name="files"
+                                    render={() => (
+                                        <FormItem className="flex">
+                                            <FormLabel className={`cursor-pointer content-center hover:opacity-50
+                                                                ${previewFiles.length > 0 && 'border rounded-md px-2 flex items-center'}
+                                                                ${previewFiles.length > 10 && 'bg-red-600 text-white'}`}>
+                                                <Paperclip className="w-4 h-4" />
+                                                {previewFiles.length > 0 &&
+                                                    (<span className="ml-1">{previewFiles.length} / 10</span>)}
+                                            </FormLabel>
+
+                                            <FormControl>
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    accept="image/*,video/*"
+                                                    className="hidden"
+                                                    onChange={handleFileChange}
+                                                />
+                                            </FormControl>
+                                            <FormMessage className="ml-2" />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <Button type="submit" variant="outline">
+                                    <SendHorizonal />
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </Form>
@@ -157,16 +280,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
                                     key={index}
                                     index={index}
                                     file={file}
-                                    deleteBtn={isEditing}
                                     onClickEnlarge={handlePreviewFileClick}
-                                    onClickDelete={handleFileDelete}
                                 />
                             ))}
                         </div>
                     )}
 
                     {selectedPreviewFile && (
-                        <EnlargeFile file={selectedPreviewFile} onClickClose={handleEnlargeClose} />
+                        <EnlargeFile file={selectedPreviewFile} onClickClose={() => setSelectedPreviewFile(null)} />
                     )}
                 </>
             )}
@@ -175,3 +296,5 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
 }
 
 export default ReviewCard;
+
+//TODO: 삭제버튼 눌렀을 때 삭제여부 묻기

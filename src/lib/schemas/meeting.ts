@@ -26,12 +26,21 @@ export const meetingFilterSchema = z.object({
     sortOption: z.enum(MEETING_SORT_OPTIONS).optional(),
 })
 
+export const reviewFileSchema = z.object({
+    id: z.number().optional(),
+    file: z.instanceof(File),
+    type: z.enum(["IMAGE", "VIDEO"]),
+    url: z.string().url(),
+    state: z.enum(["NEW", "DELETE"]).optional(),
+})
+
 export const meetingReviewSchema = z.object({
     id: z.number().optional(),
     writerId: z.number(),
     meetingId: z.number(),
     comments: z.string().optional(),
-    files: z.array(z.instanceof(File)).max(10, '파일은 한 번에 10개까지 업로드 가능합니다.').optional(),
+    files: z.array(z.instanceof(File)).optional(),
+    reviewFiles: z.array(reviewFileSchema).max(10, '파일은 한 번에 10개까지 업로드 가능합니다.').optional(),
     createdAt: z.string().optional(),
 }).refine(data => {
     const hasComment = data.comments && data.comments.trim().length > 0;

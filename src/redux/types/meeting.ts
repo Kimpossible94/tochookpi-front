@@ -8,6 +8,7 @@ export interface MeetingLocation {
 }
 
 export interface ReviewFile {
+    id?: number;
     file: File;
     type: "IMAGE" | "VIDEO";
     url: string;
