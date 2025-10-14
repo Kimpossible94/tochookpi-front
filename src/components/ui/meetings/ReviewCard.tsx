@@ -15,13 +15,14 @@ import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/
 import api from "@/services/api";
 import {Spinner} from "@/components/ui/shadcn/spinner";
 import {Button} from "@/components/ui/shadcn/button";
+import ConfirmDialog from "@/components/ui/common/ConfirmDialog";
 
 interface ReviewCardProps {
     review: MeetingReview;
-    onDelete?: () => void;
+    onChange?: () => void;
 }
 
-const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
+const ReviewCard: React.FC<ReviewCardProps> = ({review, onChange}) => {
     const [selectedPreviewFile, setSelectedPreviewFile] = useState<ReviewFile | null>(null);
     const { user } = useSelector((state: RootState) => state.user);
     const [btnLoading, setBtnLoading] = useState(false);
@@ -104,7 +105,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
 
         try {
             await api.delete(`/reviews/${review.id}`);
-            if (onDelete) onDelete();
+            if (onChange) onChange();
         } catch (error) {
             console.error("삭제 실패:", error);
             // TODO: 토큰 만료, 이미 삭제된 모임 등 예외 처리
@@ -133,9 +134,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
             });
 
         try {
-            await api.put(`/reviews/${review.id}`, formData).then(() => {
-                alert("성공적으로 수정되었습니다.")
-            })
+            await api.put(`/reviews/${review.id}`, formData);
+            setIsEditing(false);
+            if (onChange) onChange();
         } catch (error) {
             alert("등록에 수정에 실패했습니다.")
         }
@@ -174,13 +175,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, onDelete}) => {
                                 />}
                         </button>
                         {btnLoading ? <Spinner size="small" />
-                            :  <button
-                                type="button"
-                                className="text-red-500 hover:opacity-50 p-0.5 rounded"
-                                onClick={handleReviewDelete}
-                                >
-                                <Trash2 className="w-3.5 h-3.5"/>
-                            </button>
+                            :
+                                <ConfirmDialog
+                                    trigger={<Trash2 className="w-3.5 h-full text-red-500 hover:opacity-50 rounded"/>}
+                                    title="리뷰 삭제"
+                                    description="해당 리뷰를 삭제히겠습니까?"
+                                    confirmText="삭제"
+                                    onConfirm={handleReviewDelete}
+                                />
                         }
                     </div>
                 )}

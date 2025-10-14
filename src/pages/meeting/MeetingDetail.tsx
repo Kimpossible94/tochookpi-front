@@ -232,30 +232,35 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
     const handleReviewSubmit = async (data: z.infer<typeof meetingReviewSchema>) => {
         const formData = new FormData();
         const { files, ...dtoWithoutFiles } = data;
-        if (data.files) {
-            data.files.forEach(file => {
-                formData.append("files", file);
-            });
+
+        if (files) {
+            files.forEach(file => formData.append("files", file));
         }
-        formData.append('review', new Blob([JSON.stringify(dtoWithoutFiles)], {type: 'application/json'}));
+        formData.append('review', new Blob([JSON.stringify(dtoWithoutFiles)], { type: 'application/json' }));
 
         try {
-            await api.post("/reviews", formData).then(() => {
-                alert("성공적으로 등록되었습니다.")
-            })
+            await api.post("/reviews", formData);
+            alert("성공적으로 등록되었습니다.");
         } catch (error) {
-            alert("등록에 실패했습니다.")
+            alert("등록에 실패했습니다.");
         }
+
+        await fetchMeetingReviews();
     };
 
-    const handleDeleteReview = (reviewId: number) => {
+    const afterChangeReview = () => {
         if(!meeting) return;
-
-        setMeeting({
-            ...meeting,
-            reviews: meeting.reviews?.filter((review) => review.id !== reviewId) || []
-        });
+        fetchMeetingReviews();
     }
+
+    const fetchMeetingReviews = async () => {
+        try {
+            const res = await api.get(`/reviews/meeting/${meetingId}`);
+            setMeeting(prev => prev ? { ...prev, reviews: res.data } : null);
+        } catch (error) {
+            console.error("리뷰 목록 조회 실패", error);
+        }
+    };
 
     if (loading) {
         return (
@@ -437,7 +442,7 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
                                 {meeting.reviews && meeting.reviews.length > 0 ? (
                                     <div className="w-full space-y-3 pb-10">
                                         {meeting.reviews.map((review, index) => (
-                                            <ReviewCard key={index} review={review} onDelete={() => handleDeleteReview(review.id)}/>
+                                            <ReviewCard key={index} review={review} onChange={afterChangeReview}/>
                                         ))}
                                     </div>
                                 ) : (
@@ -551,10 +556,5 @@ const MeetingDetail: React.FC<MeetingDetailProps> = ({ meetingId, onClosed }) =>
         </div>
     );
 };
-
-// TODO: 모임후기 목록에서 사진 및 동영상 확대 (완료)
-// TODO: 모임 후기 수정
-// TODO: 모임 후기 삭제
-// TODO: 모임 CRUD 작업 후 후처리 (입력창 비움 및 목록 새로고침)
 
 export default MeetingDetail;
